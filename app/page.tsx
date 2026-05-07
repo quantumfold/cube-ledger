@@ -3,10 +3,13 @@ import { CalendarDays, Filter, Plus, Trophy } from "lucide-react";
 import { DraftTable } from "@/components/DraftTable";
 import { FastEntryPanel } from "@/components/FastEntryPanel";
 import { StatTable } from "@/components/StatTable";
-import { drafts, players } from "@/lib/seed";
+import { getDrafts, getPlayers } from "@/lib/data";
 import { achievements, money, playerStats } from "@/lib/stats";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
   const stats = playerStats(players, drafts).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
   const totalMatches = drafts.reduce((sum, draft) => sum + draft.matches.length, 0);
   const totalMoney = stats.reduce((sum, row) => sum + row.totalMoneyCents, 0);

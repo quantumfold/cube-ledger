@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Edit3, Eye } from "lucide-react";
 import { DraftEvent } from "@/lib/types";
 import { money, standingsForDraft } from "@/lib/stats";
 
@@ -16,6 +17,7 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
             <th>Winner</th>
             <th>Stake</th>
             <th>Net Leader</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -32,6 +34,12 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
                 <td>{standings[0]?.displayName ?? "N/A"}</td>
                 <td>{money(draft.defaultStakeCents)}</td>
                 <td className={netLeader?.moneyCents >= 0 ? "money-pos" : "money-neg"}>{netLeader ? `${netLeader.displayName} ${money(netLeader.moneyCents)}` : "N/A"}</td>
+                <td>
+                  <div className="inline-actions">
+                    <Link className="button" href={`/drafts/${draft.id}`}><Eye size={16} /> View</Link>
+                    <Link className="button" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</Link>
+                  </div>
+                </td>
               </tr>
             );
           })}

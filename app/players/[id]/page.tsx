@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import { DraftTable } from "@/components/DraftTable";
-import { drafts, players } from "@/lib/seed";
+import { getDrafts, getPlayers } from "@/lib/data";
 import { headToHeadForPlayer, money, percent, playerStats, standingsForDraft } from "@/lib/stats";
+
+export const dynamic = "force-dynamic";
 
 export default async function PlayerProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
   const player = players.find((candidate) => candidate.id === id);
   if (!player) notFound();
   const stats = playerStats(players, drafts).find((row) => row.playerId === player.id);

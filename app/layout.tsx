@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BarChart3 } from "lucide-react";
+import { AuthButton } from "@/components/AuthButton";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/new-draft">New Draft</Link>
               <Link href="/players/p1">Player Profile</Link>
             </nav>
+            <AuthButton />
           </header>
           <main className="main">{children}</main>
         </div>

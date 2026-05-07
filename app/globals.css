@@ -79,6 +79,21 @@ a {
   color: var(--ink);
 }
 
+.auth-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.auth-name {
+  max-width: 180px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .main {
   width: min(1440px, 100%);
   margin: 0 auto;
@@ -149,6 +164,15 @@ button.primary {
 select,
 input {
   padding: 7px 10px;
+}
+
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  font: inherit;
+  padding: 9px 10px;
 }
 
 .panel {
@@ -318,6 +342,11 @@ th {
   }
 
   .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .auth-cluster {
     align-items: flex-start;
     flex-direction: column;
   }

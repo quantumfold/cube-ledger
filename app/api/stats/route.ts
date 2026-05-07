@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { drafts, players } from "@/lib/seed";
+import { getDrafts, getPlayers } from "@/lib/data";
 import { achievements, playerStats } from "@/lib/stats";
 
-export function GET() {
+export async function GET() {
+  const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
   const stats = playerStats(players, drafts);
   return NextResponse.json({ stats, achievements: achievements(stats, drafts) });
 }

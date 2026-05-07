@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { players } from "@/lib/seed";
+import { getPlayers } from "@/lib/data";
 
-export function GET() {
+export async function GET() {
+  const players = await getPlayers();
   return NextResponse.json({ players });
 }

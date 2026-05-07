@@ -1,7 +1,10 @@
 import { DraftTable } from "@/components/DraftTable";
-import { drafts } from "@/lib/seed";
+import { getDrafts } from "@/lib/data";
 
-export default function DraftsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DraftsPage() {
+  const drafts = await getDrafts();
   return (
     <section className="panel panel-pad">
       <div className="section-title">

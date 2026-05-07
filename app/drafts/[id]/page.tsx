@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Edit3 } from "lucide-react";
-import { drafts } from "@/lib/seed";
+import { getDraft } from "@/lib/data";
 import { money, standingsForDraft } from "@/lib/stats";
+
+export const dynamic = "force-dynamic";
 
 export default async function DraftDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const draft = drafts.find((candidate) => candidate.id === id);
+  const draft = await getDraft(id);
   if (!draft) notFound();
   const standings = standingsForDraft(draft);
 
@@ -21,7 +23,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
               {draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam} won` : ""}
             </div>
           </div>
-          <button className="primary" type="button"><Edit3 size={16} /> Edit</button>
+          <Link className="button primary" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</Link>
         </div>
         <p className="muted">{draft.notes}</p>
       </section>

@@ -1,7 +1,10 @@
 import { FastEntryPanel } from "@/components/FastEntryPanel";
-import { players } from "@/lib/seed";
+import { getPlayers } from "@/lib/data";
 
-export default function NewDraftPage() {
+export const dynamic = "force-dynamic";
+
+export default async function NewDraftPage() {
+  const players = await getPlayers();
   return (
     <div className="grid split">
       <FastEntryPanel players={players} />
