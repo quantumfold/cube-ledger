@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Edit3, Eye } from "lucide-react";
 import { DraftEvent } from "@/lib/types";
 import { money, standingsForDraft } from "@/lib/stats";
@@ -26,7 +25,7 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
             const netLeader = [...standings].sort((a, b) => b.moneyCents - a.moneyCents)[0];
             return (
               <tr key={draft.id}>
-                <td><Link href={`/drafts/${draft.id}`}><strong>{draft.title}</strong></Link></td>
+                <td><a href={`/drafts/${draft.id}`}><strong>{draft.title}</strong></a></td>
                 <td>{draft.eventDate}</td>
                 <td>{draft.format}{draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam}` : ""}</td>
                 <td>{draft.draftType}</td>
@@ -36,8 +35,8 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
                 <td className={netLeader?.moneyCents >= 0 ? "money-pos" : "money-neg"}>{netLeader ? `${netLeader.displayName} ${money(netLeader.moneyCents)}` : "N/A"}</td>
                 <td>
                   <div className="inline-actions">
-                    <Link className="button" href={`/drafts/${draft.id}`}><Eye size={16} /> View</Link>
-                    <Link className="button" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</Link>
+                    <a className="button" href={`/drafts/${draft.id}`}><Eye size={16} /> View</a>
+                    <a className="button" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</a>
                   </div>
                 </td>
               </tr>

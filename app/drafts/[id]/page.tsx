@@ -23,7 +23,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
               {draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam} won` : ""}
             </div>
           </div>
-          <Link className="button primary" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</Link>
+          <a className="button primary" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</a>
         </div>
         <p className="muted">{draft.notes}</p>
       </section>
