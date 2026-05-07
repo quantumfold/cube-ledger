@@ -32,10 +32,11 @@ export function AuthButton() {
 
   async function signInWithGoogle() {
     const origin = window.location.origin;
+    const next = new URLSearchParams(window.location.search).get("next") ?? "/";
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/auth/callback?next=/`
+        redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`
       }
     });
   }
@@ -43,6 +44,7 @@ export function AuthButton() {
   async function signOut() {
     await supabase.auth.signOut();
     setUser(null);
+    window.location.href = "/login";
   }
 
   if (isLoading) {
