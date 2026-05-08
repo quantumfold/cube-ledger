@@ -192,6 +192,14 @@ button.danger {
   color: white;
 }
 
+.button-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 select,
 input {
   padding: 7px 10px;

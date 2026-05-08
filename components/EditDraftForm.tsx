@@ -129,7 +129,12 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       <section className="panel panel-pad">
         <div className="section-title">
           <h1 style={{ margin: 0, fontSize: 24 }}>Edit Draft</h1>
-          <button type="button" className="primary" onClick={save} disabled={isSaving}><Save size={16} /> {isSaving ? "Saving..." : "Save changes"}</button>
+          <div className="button-row">
+            <button type="button" className="danger" disabled={isDeleting} onClick={deleteDraft}>
+              <Trash2 size={16} /> {isDeleting ? "Deleting..." : "Delete draft"}
+            </button>
+            <button type="button" className="primary" onClick={save} disabled={isSaving}><Save size={16} /> {isSaving ? "Saving..." : "Save changes"}</button>
+          </div>
         </div>
         <div className="entry-grid">
           <input aria-label="Draft title" value={title} onChange={(event) => setTitle(event.target.value)} />
@@ -237,15 +242,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
         </div>
       </section>
 
-      <section className="panel panel-pad danger-zone">
-        <div>
-          <h2>Delete Draft</h2>
-          <p className="muted">Deleting a draft permanently removes its participants, matches, match results, money results, and audit entries.</p>
-        </div>
-        <button type="button" className="danger" disabled={isDeleting} onClick={deleteDraft}>
-          <Trash2 size={16} /> {isDeleting ? "Deleting..." : "Delete draft"}
-        </button>
-      </section>
+      <p className="muted">Deleting a draft permanently removes its participants, matches, match results, money results, and audit entries.</p>
     </div>
   );
 }
