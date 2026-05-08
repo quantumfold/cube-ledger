@@ -11,8 +11,6 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
   const stats = playerStats(players, drafts).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
-  const totalMatches = drafts.reduce((sum, draft) => sum + draft.matches.length, 0);
-  const totalMoney = stats.reduce((sum, row) => sum + row.totalMoneyCents, 0);
   const achievementRows = achievements(stats, drafts);
   const { winRateSeries, moneySeries } = playerTrendSeries(players, drafts);
 
@@ -27,13 +25,6 @@ export default async function DashboardPage() {
             <Link className="button" href="/drafts"><CalendarDays size={16} /> Draft History</Link>
           </div>
         </div>
-      </section>
-
-      <section className="grid kpis">
-        <div className="panel kpi"><span>Total drafts</span><strong>{drafts.length}</strong></div>
-        <div className="panel kpi"><span>Total matches</span><strong>{totalMatches}</strong></div>
-        <div className="panel kpi"><span>Tracked players</span><strong>{players.length}</strong></div>
-        <div className="panel kpi"><span>Net money</span><strong>{money(totalMoney)}</strong></div>
       </section>
 
       <section className="panel panel-pad" style={{ marginTop: 18 }}>
