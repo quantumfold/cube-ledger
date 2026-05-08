@@ -1,6 +1,6 @@
 import { drafts as seedDrafts, players as seedPlayers } from "@/lib/seed";
-import { DraftEvent, Player } from "@/lib/types";
-import { mapDraft, mapPlayer } from "@/lib/supabase/mappers";
+import { DeckImage, DraftEvent, Player } from "@/lib/types";
+import { DbDeckImage, mapDeckImage, mapDraft, mapPlayer } from "@/lib/supabase/mappers";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
 
 const draftSelect = `
@@ -28,8 +28,9 @@ export async function getDrafts(): Promise<DraftEvent[]> {
   if (error) return seedDrafts;
   if (data) {
     const drafts = data.map(mapDraft);
-    const auditLogs = await getAuditLogsForDrafts(drafts.map((draft) => draft.id));
-    return drafts.map((draft) => ({ ...draft, auditLog: auditLogs.get(draft.id) ?? [] }));
+    const draftIds = drafts.map((draft) => draft.id);
+    const [auditLogs, deckImages] = await Promise.all([getAuditLogsForDrafts(draftIds), getDeckImagesForDrafts(draftIds)]);
+    return drafts.map((draft) => attachDeckImages({ ...draft, auditLog: auditLogs.get(draft.id) ?? [] }, deckImages));
   }
   return [];
 }
@@ -41,8 +42,50 @@ export async function getDraft(id: string): Promise<DraftEvent | undefined> {
   const { data, error } = await supabase.from("draft_events").select(draftSelect).eq("id", id).single();
   if (error || !data) return seedDrafts.find((draft) => draft.id === id);
   const draft = mapDraft(data);
-  const auditLogs = await getAuditLogsForDrafts([draft.id]);
-  return { ...draft, auditLog: auditLogs.get(draft.id) ?? [] };
+  const [auditLogs, deckImages] = await Promise.all([getAuditLogsForDrafts([draft.id]), getDeckImagesForDrafts([draft.id])]);
+  return attachDeckImages({ ...draft, auditLog: auditLogs.get(draft.id) ?? [] }, deckImages);
+}
+
+function attachDeckImages(draft: DraftEvent, imagesByParticipantId: Map<string, DeckImage[]>) {
+  return {
+    ...draft,
+    participants: draft.participants.map((participant) => ({
+      ...participant,
+      deckImages: imagesByParticipantId.get(participant.id) ?? []
+    }))
+  };
+}
+
+async function getDeckImagesForDrafts(draftIds: string[]) {
+  const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
+  const images = new Map<string, DeckImage[]>();
+  if (!supabase || !draftIds.length) return images;
+
+  const { data, error } = await supabase
+    .from("deck_images")
+    .select("*")
+    .in("draft_event_id", draftIds)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return images;
+
+  const admin = getSupabaseAdminClient();
+  const rows = data as DbDeckImage[];
+  const signedUrls = admin
+    ? await Promise.all(rows.map((row) => admin.storage.from("deck-images").createSignedUrl(row.storage_path, 60 * 60)))
+    : [];
+
+  rows.forEach((row, index) => {
+    const image = mapDeckImage({
+      ...row,
+      signed_url: signedUrls[index]?.data?.signedUrl ?? null
+    });
+    const current = images.get(image.participantId) ?? [];
+    current.push(image);
+    images.set(image.participantId, current);
+  });
+
+  return images;
 }
 
 async function getAuditLogsForDrafts(draftIds: string[]) {

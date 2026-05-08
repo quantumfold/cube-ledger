@@ -15,6 +15,7 @@ The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behi
 - Match result entry with wins, losses, draws, notes, and optional sidebets
 - Manual money tracking per player
 - Deck archetype, colors, strategy notes, deck notes, and optional decklists
+- Up to two uploaded deck photos per player per draft
 - Draft history table with edit and detail links
 - Draft detail pages with standings, matches, decklists, money results, and audit log
 - Audit log entries showing who submitted each draft change
@@ -62,7 +63,8 @@ Open the app at the local URL printed by Next.js, usually [http://localhost:3000
 2. Open the Supabase SQL Editor.
 3. Create the tables from the schema in [docs/implementation-plan.md](docs/implementation-plan.md).
 4. Run [docs/seed-players.sql](docs/seed-players.sql) to create the playgroup player accounts.
-5. Confirm the `users.email` values match the Google accounts players will use to log in.
+5. Run [docs/deck-images.sql](docs/deck-images.sql) to create the deck photo metadata table and private `deck-images` Storage bucket.
+6. Confirm the `users.email` values match the Google accounts players will use to log in.
 
 The main tables are:
 
@@ -73,6 +75,7 @@ The main tables are:
 - `match_results`: game wins, losses, draws, and correction metadata
 - `money_results`: manually entered net money result per draft participant
 - `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
+- `deck_images`: metadata for uploaded deck photos stored in Supabase Storage
 - `offline_mutations`: planned storage for future offline sync/conflict handling
 
 ## Google Auth Setup

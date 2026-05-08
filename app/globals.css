@@ -447,6 +447,44 @@ th {
   white-space: pre-wrap;
 }
 
+.deck-photo-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.deck-photo-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+
+.deck-photo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deck-photo-links a {
+  color: var(--accent);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.text-button {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  color: var(--bad);
+  padding: 2px 4px;
+  font-size: 12px;
+}
+
 .avatar {
   width: 34px;
   height: 34px;

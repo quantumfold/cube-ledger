@@ -96,6 +96,21 @@ create table audit_log (
   after jsonb
 );
 
+create table deck_images (
+  id uuid primary key default gen_random_uuid(),
+  draft_event_id uuid not null references draft_events(id) on delete cascade,
+  draft_participant_id uuid not null references draft_participants(id) on delete cascade,
+  uploaded_by uuid references users(id),
+  storage_path text not null unique,
+  file_name text not null,
+  mime_type text not null,
+  file_size_bytes integer not null check (file_size_bytes > 0 and file_size_bytes <= 2097152),
+  caption text,
+  created_at timestamptz not null default now()
+);
+
+create index deck_images_participant_idx on deck_images (draft_participant_id, created_at);
+
 create table offline_mutations (
   id uuid primary key,
   client_id text not null,
@@ -148,6 +163,7 @@ create table offline_mutations (
 - Money net values may be positive, negative, or zero; all values are stored in cents.
 - Draft standings and lifetime money include manual money results plus match sidebet wins/losses.
 - Participant display names are snapshotted to preserve history after profile changes.
+- Each draft participant can have at most two uploaded deck photos. Photos are stored in the private `deck-images` Supabase Storage bucket and referenced by `deck_images.storage_path`.
 - Statistics are derived from saved matches, participants, and money rows rather than manually stored totals.
 
 ## Offline Strategy

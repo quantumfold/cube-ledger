@@ -3,7 +3,7 @@
 import { Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { DraftEvent } from "@/lib/types";
+import { DeckImage, DraftEvent } from "@/lib/types";
 
 type ParticipantEdit = {
   id: string;
@@ -62,6 +62,10 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [uploadingParticipantId, setUploadingParticipantId] = useState<string | null>(null);
+  const [deckImagesByParticipant, setDeckImagesByParticipant] = useState<Record<string, DeckImage[]>>(() => Object.fromEntries(
+    draft.participants.map((participant) => [participant.id, participant.deckImages ?? []])
+  ));
 
   const participantNames = useMemo(() => new Map(draft.participants.map((participant) => [participant.id, participant.displayNameSnapshot])), [draft.participants]);
 
@@ -121,6 +125,64 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       setStatus(error instanceof Error ? error.message : "Could not delete draft");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  async function uploadDeckPhoto(participantId: string, file: File | undefined) {
+    if (!file) return;
+    const existingImages = deckImagesByParticipant[participantId] ?? [];
+    if (existingImages.length >= 2) {
+      setStatus("Each deck can have at most 2 photos.");
+      return;
+    }
+
+    setStatus("");
+    setUploadingParticipantId(participantId);
+    try {
+      const compressed = await compressImage(file);
+      const formData = new FormData();
+      formData.append("draftId", draft.id);
+      formData.append("participantId", participantId);
+      formData.append("file", compressed);
+
+      const response = await fetch("/api/deck-images", {
+        method: "POST",
+        body: formData
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not upload deck photo");
+
+      const image = mapUploadedImage(result.image);
+      setDeckImagesByParticipant((current) => ({
+        ...current,
+        [participantId]: [...(current[participantId] ?? []), image]
+      }));
+      setStatus("Deck photo uploaded.");
+      router.refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not upload deck photo");
+    } finally {
+      setUploadingParticipantId(null);
+    }
+  }
+
+  async function deleteDeckPhoto(participantId: string, imageId: string) {
+    const confirmed = window.confirm("Delete this deck photo?");
+    if (!confirmed) return;
+
+    setStatus("");
+    try {
+      const response = await fetch(`/api/deck-images/${imageId}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not delete deck photo");
+      setDeckImagesByParticipant((current) => ({
+        ...current,
+        [participantId]: (current[participantId] ?? []).filter((image) => image.id !== imageId)
+      }));
+      setStatus("Deck photo deleted.");
+      router.refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not delete deck photo");
     }
   }
 
@@ -195,7 +257,10 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
         <div className="grid">
           {participants.map((participant) => (
             <div key={participant.id}>
-              <strong>{participantNames.get(participant.id)}</strong>
+              <div className="section-title">
+                <strong>{participantNames.get(participant.id)}</strong>
+                <span className="pill">{(deckImagesByParticipant[participant.id] ?? []).length}/2 photos</span>
+              </div>
               <textarea
                 aria-label={`${participantNames.get(participant.id)} decklist`}
                 value={participant.decklist}
@@ -204,6 +269,31 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                 rows={8}
                 style={{ marginTop: 8, width: "100%" }}
               />
+              <div className="deck-photo-tools">
+                <input
+                  aria-label={`${participantNames.get(participant.id)} deck photo`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/*"
+                  disabled={(deckImagesByParticipant[participant.id] ?? []).length >= 2 || uploadingParticipantId === participant.id}
+                  onChange={(event) => {
+                    void uploadDeckPhoto(participant.id, event.target.files?.[0]);
+                    event.target.value = "";
+                  }}
+                />
+                {uploadingParticipantId === participant.id ? <span className="muted">Uploading...</span> : null}
+              </div>
+              {(deckImagesByParticipant[participant.id] ?? []).length ? (
+                <div className="deck-photo-links">
+                  {(deckImagesByParticipant[participant.id] ?? []).map((image, index) => (
+                    <span key={image.id} className="deck-photo-link">
+                      <a href={image.signedUrl} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
+                      <button type="button" className="text-button" onClick={() => void deleteDeckPhoto(participant.id, image.id)}>Remove</button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">No deck photos uploaded.</p>
+              )}
             </div>
           ))}
         </div>
@@ -245,4 +335,39 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       <p className="muted">Deleting a draft permanently removes its participants, matches, match results, money results, and audit entries.</p>
     </div>
   );
+}
+
+function mapUploadedImage(row: Record<string, unknown>): DeckImage {
+  return {
+    id: String(row.id),
+    draftEventId: String(row.draft_event_id),
+    participantId: String(row.draft_participant_id),
+    uploadedBy: typeof row.uploaded_by === "string" ? row.uploaded_by : undefined,
+    storagePath: String(row.storage_path),
+    fileName: String(row.file_name),
+    mimeType: String(row.mime_type),
+    fileSizeBytes: Number(row.file_size_bytes),
+    caption: typeof row.caption === "string" ? row.caption : undefined,
+    createdAt: String(row.created_at),
+    signedUrl: typeof row.signed_url === "string" ? row.signed_url : undefined
+  };
+}
+
+async function compressImage(file: File) {
+  if (!file.type.startsWith("image/")) return file;
+  const bitmap = await createImageBitmap(file);
+  const maxDimension = 1600;
+  const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+  const width = Math.max(1, Math.round(bitmap.width * scale));
+  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) return file;
+  context.drawImage(bitmap, 0, 0, width, height);
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+  bitmap.close();
+  if (!blob) return file;
+  return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
 }

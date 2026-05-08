@@ -106,6 +106,15 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
                 <h3>{participant.displayNameSnapshot}</h3>
                 <span className="pill">{participant.deckArchetype || "No archetype"}</span>
               </div>
+              {(participant.deckImages ?? []).length ? (
+                <div className="deck-photo-links">
+                  {(participant.deckImages ?? []).map((image, index) => (
+                    <a key={image.id} href={image.signedUrl} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
+                  ))}
+                </div>
+              ) : (
+                <p className="muted">No deck photos uploaded.</p>
+              )}
               {participant.decklist ? (
                 <pre className="decklist">{participant.decklist}</pre>
               ) : (

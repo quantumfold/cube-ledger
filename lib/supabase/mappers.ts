@@ -1,4 +1,4 @@
-import { DraftEvent, DraftParticipant, Match, MoneyResult, Player } from "@/lib/types";
+import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, Player } from "@/lib/types";
 
 type DbUser = {
   id: string;
@@ -38,6 +38,20 @@ type DbParticipant = {
   deck_notes: string | null;
   decklist: string | null;
   team: "A" | "B" | null;
+};
+
+export type DbDeckImage = {
+  id: string;
+  draft_event_id: string;
+  draft_participant_id: string;
+  uploaded_by: string | null;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  file_size_bytes: number;
+  caption: string | null;
+  created_at: string;
+  signed_url?: string | null;
 };
 
 type DbMatch = {
@@ -127,7 +141,24 @@ function mapParticipant(row: DbParticipant): DraftParticipant {
     strategy: row.strategy ?? "",
     deckNotes: row.deck_notes ?? "",
     decklist: row.decklist ?? undefined,
+    deckImages: [],
     team: row.team ?? undefined
+  };
+}
+
+export function mapDeckImage(row: DbDeckImage): DeckImage {
+  return {
+    id: row.id,
+    draftEventId: row.draft_event_id,
+    participantId: row.draft_participant_id,
+    uploadedBy: row.uploaded_by ?? undefined,
+    storagePath: row.storage_path,
+    fileName: row.file_name,
+    mimeType: row.mime_type,
+    fileSizeBytes: row.file_size_bytes,
+    caption: row.caption ?? undefined,
+    createdAt: row.created_at,
+    signedUrl: row.signed_url ?? undefined
   };
 }
 

@@ -20,7 +20,22 @@ export type DraftParticipant = {
   strategy: string;
   deckNotes: string;
   decklist?: string;
+  deckImages?: DeckImage[];
   team?: "A" | "B";
+};
+
+export type DeckImage = {
+  id: string;
+  draftEventId: string;
+  participantId: string;
+  uploadedBy?: string;
+  storagePath: string;
+  fileName: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  caption?: string;
+  createdAt: string;
+  signedUrl?: string;
 };
 
 export type Match = {
