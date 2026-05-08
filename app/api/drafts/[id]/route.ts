@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentAppUser } from "@/lib/auth";
 import { getDraft } from "@/lib/data";
 import { standingsForDraft } from "@/lib/stats";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
@@ -26,7 +27,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "This draft changed since you opened it. Refresh and try again.", expectedVersion: draft.version }, { status: 409 });
   }
 
-  const changedBy = draft.createdBy;
+  const currentUser = await getCurrentAppUser();
+  const changedBy = currentUser?.id ?? draft.createdBy;
   const before = snapshotDraft(draft);
 
   const { error: draftError } = await supabase
@@ -122,6 +124,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   });
 
   return NextResponse.json({ status: "updated", id, version: draft.version + 1 });
+}
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const draft = await getDraft(id);
+  if (!draft) return NextResponse.json({ error: "Draft not found" }, { status: 404 });
+  const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
+  if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 500 });
+
+  const { error: auditError } = await supabase.from("audit_log").delete().eq("entity_type", "DraftEvent").eq("entity_id", id);
+  if (auditError) return NextResponse.json({ error: auditError.message }, { status: 500 });
+
+  const { error } = await supabase.from("draft_events").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({ status: "deleted", id });
 }
 
 type EditPayload = {

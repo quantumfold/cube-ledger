@@ -1,6 +1,6 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { DraftEvent } from "@/lib/types";
@@ -61,6 +61,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   })));
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const participantNames = useMemo(() => new Map(draft.participants.map((participant) => [participant.id, participant.displayNameSnapshot])), [draft.participants]);
 
@@ -101,6 +102,25 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       setStatus(error instanceof Error ? error.message : "Could not save changes");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function deleteDraft() {
+    const confirmed = window.confirm(`Delete "${draft.title}"? This will permanently remove the draft, participants, matches, money results, and audit log entries.`);
+    if (!confirmed) return;
+
+    setStatus("");
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/drafts/${draft.id}`, { method: "DELETE" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not delete draft");
+      router.push("/drafts");
+      router.refresh();
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not delete draft");
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -215,6 +235,16 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section className="panel panel-pad danger-zone">
+        <div>
+          <h2>Delete Draft</h2>
+          <p className="muted">Deleting a draft permanently removes its participants, matches, match results, money results, and audit entries.</p>
+        </div>
+        <button type="button" className="danger" disabled={isDeleting} onClick={deleteDraft}>
+          <Trash2 size={16} /> {isDeleting ? "Deleting..." : "Delete draft"}
+        </button>
       </section>
     </div>
   );

@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Link href="/">Dashboard</Link>
               <Link href="/drafts">Draft History</Link>
               <Link href="/new-draft">New Draft</Link>
-              <Link href="/players/p1">Player Profile</Link>
+              <Link href="/players">Player Profile</Link>
             </nav>
             <AuthButton />
           </header>

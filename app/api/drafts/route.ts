@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCurrentAppUser } from "@/lib/auth";
 import { getDrafts } from "@/lib/data";
 import { standingsForDraft } from "@/lib/stats";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
@@ -27,7 +28,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "One or more selected players could not be found" }, { status: 400 });
   }
 
-  const createdBy = playerRows.find((player) => player.role === "admin" || player.role === "organizer")?.id ?? playerRows[0].id;
+  const currentUser = await getCurrentAppUser();
+  const createdBy = currentUser?.id ?? playerRows.find((player) => player.role === "admin" || player.role === "organizer")?.id ?? playerRows[0].id;
   const { data: draft, error: draftError } = await supabase
     .from("draft_events")
     .insert({

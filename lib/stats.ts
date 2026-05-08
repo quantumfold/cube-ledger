@@ -170,6 +170,36 @@ export function playerTrendSeries(players: Player[], drafts: DraftEvent[]) {
   return { winRateSeries, moneySeries };
 }
 
+export function playerProfileTrendSeries(player: Player, drafts: DraftEvent[]) {
+  const orderedDrafts = [...drafts].sort((a, b) => a.eventDate.localeCompare(b.eventDate));
+  let wins = 0;
+  let losses = 0;
+  let moneyTotal = 0;
+  const winRatePoints: Array<{ label: string; value: number }> = [];
+  const moneyPoints: Array<{ label: string; value: number }> = [];
+
+  for (const draft of orderedDrafts) {
+    const standing = standingsForDraft(draft).find((row) => row.playerId === player.id);
+    if (!standing) continue;
+    wins += standing.matchWins;
+    losses += standing.matchLosses;
+    moneyTotal += standing.moneyCents;
+    winRatePoints.push({
+      label: draft.eventDate,
+      value: wins + losses ? wins / (wins + losses) : 0
+    });
+    moneyPoints.push({
+      label: draft.eventDate,
+      value: moneyTotal
+    });
+  }
+
+  return {
+    winRateSeries: [{ name: player.displayName, color: "#0f766e", points: winRatePoints }],
+    moneySeries: [{ name: player.displayName, color: "#9a3412", points: moneyPoints }]
+  };
+}
+
 export function headToHeadForPlayer(playerId: string, players: Player[], drafts: DraftEvent[]): HeadToHead[] {
   const rows = new Map<string, HeadToHead>();
   for (const player of players.filter((candidate) => candidate.id !== playerId)) {

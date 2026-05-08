@@ -186,6 +186,12 @@ button.primary {
   color: white;
 }
 
+button.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: white;
+}
+
 select,
 input {
   padding: 7px 10px;
@@ -209,6 +215,19 @@ textarea {
 
 .panel-pad {
   padding: 18px;
+}
+
+.danger-zone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-color: #fecaca;
+}
+
+.danger-zone h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
 }
 
 .section-title {

@@ -1,1 +1,143 @@
-# cube-ledger
+# Cube Ledger
+
+Cube Ledger is a private Magic: The Gathering Cube draft tracker for a playgroup. It records draft events, match results, sidebets, deck notes, money results, audit history, and long-term player stats.
+
+The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behind login, and users are matched to player accounts by email.
+
+## Features
+
+- Google login through Supabase Auth
+- Private dashboard visible only to logged-in users
+- Draft creation with variable player counts
+- Individual or team draft format
+- Draft type options: Vintage, Andrew Cube, Morgan Cube
+- Team assignment and winning team for team drafts
+- Match result entry with wins, losses, draws, notes, and optional sidebets
+- Manual money tracking per player
+- Deck archetype, colors, strategy notes, deck notes, and optional decklists
+- Draft history table with edit and detail links
+- Draft detail pages with standings, matches, decklists, money results, and audit log
+- Audit log entries showing who submitted each draft change
+- Player profile page with selectable player, stats, graphs, draft history, format performance, and head-to-head records
+- Dashboard line graphs for match win percentage and money over time
+- Last-12-month achievements for best/worst win rate and most money won/lost
+
+## Tech Stack
+
+- Next.js App Router
+- React
+- TypeScript
+- Supabase Postgres
+- Supabase Auth with Google OAuth
+- Vercel hosting
+- Lucide icons
+
+## Local Setup
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env.local` in the project root:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+Run the local dev server:
+
+```bash
+npm run dev
+```
+
+Open the app at the local URL printed by Next.js, usually [http://localhost:3000](http://localhost:3000).
+
+## Supabase Setup
+
+1. Create a Supabase project.
+2. Open the Supabase SQL Editor.
+3. Create the tables from the schema in [docs/implementation-plan.md](docs/implementation-plan.md).
+4. Run [docs/seed-players.sql](docs/seed-players.sql) to create the playgroup player accounts.
+5. Confirm the `users.email` values match the Google accounts players will use to log in.
+
+The main tables are:
+
+- `users`: player accounts, Google identity metadata, email, profile image, and role
+- `draft_events`: one row per draft, including date, format, draft type, stake, notes, creator, updater, and version
+- `draft_participants`: players in a draft, including historical display name snapshot, team, deck archetype, colors, notes, and decklist
+- `matches`: match pairings, sidebet amount, sidebet winner, and notes
+- `match_results`: game wins, losses, draws, and correction metadata
+- `money_results`: manually entered net money result per draft participant
+- `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
+- `offline_mutations`: planned storage for future offline sync/conflict handling
+
+## Google Auth Setup
+
+In Supabase:
+
+1. Go to Authentication > Providers.
+2. Enable Google.
+3. Add the Google OAuth Client ID and Client Secret.
+4. Copy the Supabase callback URL shown in the Google provider settings.
+
+In Google Cloud Console:
+
+1. Create or open a Google Cloud project.
+2. Go to APIs & Services > Credentials.
+3. Create an OAuth Client ID for a Web application.
+4. Add the Supabase callback URL as an Authorized redirect URI.
+5. Copy the Client ID and Client Secret back into Supabase.
+
+Important: Google blocks login from embedded browsers in some apps. Test login from Safari, Chrome, or another full browser.
+
+## Vercel Hosting
+
+1. Push this repository to GitHub.
+2. In Vercel, import the GitHub repository.
+3. Add these environment variables in Vercel Project Settings:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+4. Deploy the project.
+5. In Supabase Authentication > URL Configuration, set:
+
+```text
+Site URL: https://your-vercel-domain.vercel.app
+Redirect URLs:
+https://your-vercel-domain.vercel.app/auth/callback
+```
+
+6. In Google Cloud Console, add the same production callback URL as an Authorized redirect URI.
+
+## Common Commands
+
+```bash
+npm run dev
+npm run build
+npm run start
+```
+
+`npm run build` should pass before deploying. Existing warnings about raw `<img>` tags are non-blocking and can be cleaned up later by moving those images to Next.js `<Image />`.
+
+## Permissions
+
+- `player`: can view private draft and stats data.
+- `organizer`: can create and edit drafts.
+- `admin`: full organizer access plus administrative role assignment.
+
+The current seed makes Lucas Siow an admin and everyone else an organizer.
+
+## Notes For Production
+
+- Keep `SUPABASE_SERVICE_ROLE_KEY` private. Only store it in `.env.local` and Vercel environment variables.
+- Do not expose the service role key in browser code.
+- If Row Level Security is enabled later, add policies that allow authenticated playgroup members to read data and organizers/admins to write draft data.
+- Stats are derived from saved draft, participant, match, and money rows rather than stored as manual totals.
