@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CalendarDays, Filter, Plus, Trophy } from "lucide-react";
 import { DraftTable } from "@/components/DraftTable";
-import { FastEntryPanel } from "@/components/FastEntryPanel";
 import { LineChart } from "@/components/LineChart";
 import { StatTable } from "@/components/StatTable";
 import { getDrafts, getPlayers } from "@/lib/data";
@@ -28,7 +27,6 @@ export default async function DashboardPage() {
             <Link className="button" href="/drafts"><CalendarDays size={16} /> Draft History</Link>
           </div>
         </div>
-        <FastEntryPanel players={players} />
       </section>
 
       <section className="grid kpis">

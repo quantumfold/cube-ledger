@@ -203,27 +203,64 @@ export function headToHeadForPlayer(playerId: string, players: Player[], drafts:
   return [...rows.values()].map((row) => ({ ...row, winRate: row.wins + row.losses ? row.wins / (row.wins + row.losses) : 0 }));
 }
 
-export function achievements(stats: PlayerStats[], drafts: DraftEvent[]): Achievement[] {
-  const mostDrafts = [...stats].sort((a, b) => b.draftsPlayed - a.draftsPlayed)[0];
-  const richest = [...stats].sort((a, b) => b.totalMoneyCents - a.totalMoneyCents)[0];
-  const bestRate = [...stats].filter((row) => row.matchesPlayed >= 3).sort((a, b) => b.winRate - a.winRate)[0];
-  const biggestSwing = drafts.flatMap((draft) => standingsForDraft(draft)).sort((a, b) => Math.abs(b.moneyCents) - Math.abs(a.moneyCents))[0];
-  const twoOh = new Map<string, number>();
-  for (const draft of drafts) {
-    for (const match of draft.matches) {
-      const a = draft.participants.find((participant) => participant.id === match.playerAId);
-      const b = draft.participants.find((participant) => participant.id === match.playerBId);
-      if (match.playerAWins === 2 && match.playerBWins === 0 && a) twoOh.set(a.displayNameSnapshot, (twoOh.get(a.displayNameSnapshot) ?? 0) + 1);
-      if (match.playerBWins === 2 && match.playerAWins === 0 && b) twoOh.set(b.displayNameSnapshot, (twoOh.get(b.displayNameSnapshot) ?? 0) + 1);
+export function achievements(_stats: PlayerStats[], drafts: DraftEvent[]): Achievement[] {
+  const cutoff = new Date();
+  cutoff.setFullYear(cutoff.getFullYear() - 1);
+  const recentDrafts = drafts.filter((draft) => new Date(`${draft.eventDate}T00:00:00`) >= cutoff);
+  const rows = new Map<string, { name: string; wins: number; losses: number; draws: number; moneyCents: number }>();
+
+  for (const draft of recentDrafts) {
+    for (const standing of standingsForDraft(draft)) {
+      const current = rows.get(standing.playerId) ?? {
+        name: standing.displayName,
+        wins: 0,
+        losses: 0,
+        draws: 0,
+        moneyCents: 0
+      };
+      current.wins += standing.matchWins;
+      current.losses += standing.matchLosses;
+      current.draws += standing.matchDraws;
+      current.moneyCents += standing.moneyCents;
+      rows.set(standing.playerId, current);
     }
   }
-  const mostTwoOh = [...twoOh.entries()].sort((a, b) => b[1] - a[1])[0];
+
+  const withMatches = [...rows.values()].filter((row) => row.wins + row.losses > 0);
+  const withMoney = [...rows.values()].filter((row) => row.moneyCents !== 0);
+  const highestWinRate = [...withMatches].sort((a, b) => winRate(b) - winRate(a) || b.wins - a.wins)[0];
+  const lowestWinRate = [...withMatches].sort((a, b) => winRate(a) - winRate(b) || b.losses - a.losses)[0];
+  const mostMoneyWon = [...withMoney].sort((a, b) => b.moneyCents - a.moneyCents)[0];
+  const mostMoneyLost = [...withMoney].sort((a, b) => a.moneyCents - b.moneyCents)[0];
 
   return [
-    { title: "Most Drafts Played", playerName: mostDrafts?.displayName ?? "N/A", value: `${mostDrafts?.draftsPlayed ?? 0}`, detail: "Lifetime attendance leader" },
-    { title: "Biggest Money Swing", playerName: biggestSwing?.displayName ?? "N/A", value: money(biggestSwing?.moneyCents ?? 0), detail: "Largest single-draft net result" },
-    { title: "Best Match Win Rate", playerName: bestRate?.displayName ?? "N/A", value: percent(bestRate?.winRate ?? 0), detail: "Minimum three matches" },
-    { title: "Most 2-0 Wins", playerName: mostTwoOh?.[0] ?? "N/A", value: `${mostTwoOh?.[1] ?? 0}`, detail: "Clean match wins recorded" },
-    { title: "Money Leader", playerName: richest?.displayName ?? "N/A", value: money(richest?.totalMoneyCents ?? 0), detail: "Lifetime net result" }
+    {
+      title: "Highest Win Rate",
+      playerName: highestWinRate?.name ?? "N/A",
+      value: percent(highestWinRate ? winRate(highestWinRate) : 0),
+      detail: "Last 12 months"
+    },
+    {
+      title: "Lowest Win Rate",
+      playerName: lowestWinRate?.name ?? "N/A",
+      value: percent(lowestWinRate ? winRate(lowestWinRate) : 0),
+      detail: "Last 12 months"
+    },
+    {
+      title: "Most Money Won",
+      playerName: mostMoneyWon?.name ?? "N/A",
+      value: money(mostMoneyWon?.moneyCents ?? 0),
+      detail: "Last 12 months"
+    },
+    {
+      title: "Most Money Lost",
+      playerName: mostMoneyLost?.name ?? "N/A",
+      value: money(mostMoneyLost?.moneyCents ?? 0),
+      detail: "Last 12 months"
+    }
   ];
+}
+
+function winRate(row: { wins: number; losses: number }) {
+  return row.wins + row.losses ? row.wins / (row.wins + row.losses) : 0;
 }
