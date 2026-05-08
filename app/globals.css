@@ -187,9 +187,19 @@ button.primary {
 }
 
 button.danger {
-  background: var(--bad);
-  border-color: var(--bad);
+  background: #b91c1c;
+  border-color: #991b1b;
   color: white;
+}
+
+button.danger:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #7f1d1d;
+}
+
+button.danger:focus-visible {
+  outline: 3px solid #fecaca;
+  outline-offset: 2px;
 }
 
 .button-row {
