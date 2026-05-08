@@ -249,6 +249,67 @@ textarea {
   overflow-x: auto;
 }
 
+.chart-shell {
+  width: 100%;
+}
+
+.chart-shell svg {
+  display: block;
+  width: 100%;
+  min-height: 240px;
+}
+
+.chart-grid {
+  stroke: #e6ebe4;
+  stroke-width: 1;
+}
+
+.chart-zero {
+  stroke: #a8b2aa;
+  stroke-dasharray: 4 4;
+  stroke-width: 1.5;
+}
+
+.chart-axis {
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+
+.chart-tick {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.chart-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.chart-empty {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -317,6 +378,28 @@ th {
 
 .list-item:last-child {
   border-bottom: 0;
+}
+
+.decklist-block {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.decklist-block:last-child {
+  border-bottom: 0;
+}
+
+.decklist {
+  max-height: 320px;
+  margin: 0;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8faf7;
+  color: var(--ink);
+  font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  white-space: pre-wrap;
 }
 
 .avatar {

@@ -166,6 +166,25 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       </section>
 
       <section className="panel panel-pad">
+        <div className="section-title"><h2>Decklists</h2><span className="pill">Optional</span></div>
+        <div className="grid">
+          {participants.map((participant) => (
+            <div key={participant.id}>
+              <strong>{participantNames.get(participant.id)}</strong>
+              <textarea
+                aria-label={`${participantNames.get(participant.id)} decklist`}
+                value={participant.decklist}
+                onChange={(event) => updateParticipant(participant.id, { decklist: event.target.value })}
+                placeholder="Paste decklist or card list here"
+                rows={8}
+                style={{ marginTop: 8, width: "100%" }}
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel panel-pad">
         <div className="section-title"><h2>Existing Matches</h2></div>
         <div className="table-wrap">
           <table>

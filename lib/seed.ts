@@ -2,17 +2,17 @@ import { DraftEvent, Player } from "./types";
 
 export const players: Player[] = [
   { id: "p1", googleId: "google-lucas-siow", displayName: "Lucas Siow", email: "lucas.siow@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=47", role: "admin" },
-  { id: "p2", googleId: "google-david-ledvinka", displayName: "David Ledvinka", email: "dledvinkamath@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=12", role: "player" },
-  { id: "p3", googleId: "google-daniel-founier", displayName: "Daniel Founier", email: "tirentu@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=33", role: "player" },
-  { id: "p4", googleId: "google-jamie-naylor", displayName: "Jamie Naylor", email: "jmbnaylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=5", role: "player" },
-  { id: "p5", googleId: "google-tyler-longo", displayName: "Tyler Longo", email: "tylerlongo77@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=60", role: "player" },
-  { id: "p6", googleId: "google-maksym-gryn", displayName: "Maksym Gryn", email: "maksg7@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=9", role: "player" },
-  { id: "p7", googleId: "google-morgan-mclaughlin", displayName: "Morgan McLaughlin", email: "fozefy@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=20", role: "player" },
-  { id: "p8", googleId: "google-andrew-naylor", displayName: "Andrew Naylor", email: "andrew.s.naylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=52", role: "player" },
-  { id: "p9", googleId: "google-brian-liu", displayName: "Brian Liu", email: "liuwk.brian@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=64", role: "player" },
-  { id: "p10", googleId: "google-fadi-hirmiz", displayName: "Fadi Hirmiz", email: "zimrih.idaf@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=15", role: "player" },
-  { id: "p11", googleId: "google-paul-dean", displayName: "Paul Dean", email: "pdean2012@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=58", role: "player" },
-  { id: "p12", googleId: "google-chris-harabas", displayName: "Chris Harabas", email: "13arabas@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=3", role: "player" }
+  { id: "p2", googleId: "google-david-ledvinka", displayName: "David Ledvinka", email: "dledvinkamath@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=12", role: "organizer" },
+  { id: "p3", googleId: "google-daniel-founier", displayName: "Daniel Founier", email: "tirentu@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=33", role: "organizer" },
+  { id: "p4", googleId: "google-jamie-naylor", displayName: "Jamie Naylor", email: "jmbnaylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=5", role: "organizer" },
+  { id: "p5", googleId: "google-tyler-longo", displayName: "Tyler Longo", email: "tylerlongo77@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=60", role: "organizer" },
+  { id: "p6", googleId: "google-maksym-gryn", displayName: "Maksym Gryn", email: "maksg7@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=9", role: "organizer" },
+  { id: "p7", googleId: "google-morgan-mclaughlin", displayName: "Morgan McLaughlin", email: "fozefy@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=20", role: "organizer" },
+  { id: "p8", googleId: "google-andrew-naylor", displayName: "Andrew Naylor", email: "andrew.s.naylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=52", role: "organizer" },
+  { id: "p9", googleId: "google-brian-liu", displayName: "Brian Liu", email: "liuwk.brian@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=64", role: "organizer" },
+  { id: "p10", googleId: "google-fadi-hirmiz", displayName: "Fadi Hirmiz", email: "zimrih.idaf@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=15", role: "organizer" },
+  { id: "p11", googleId: "google-paul-dean", displayName: "Paul Dean", email: "pdean2012@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=58", role: "organizer" },
+  { id: "p12", googleId: "google-chris-harabas", displayName: "Chris Harabas", email: "13arabas@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=3", role: "organizer" }
 ];
 
 export const drafts: DraftEvent[] = [

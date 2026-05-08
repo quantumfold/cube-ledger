@@ -97,6 +97,25 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="panel panel-pad">
+        <div className="section-title"><h2>Decklists</h2><span className="pill">Optional</span></div>
+        <div className="grid">
+          {draft.participants.map((participant) => (
+            <div className="decklist-block" key={participant.id}>
+              <div className="section-title">
+                <h3>{participant.displayNameSnapshot}</h3>
+                <span className="pill">{participant.deckArchetype || "No archetype"}</span>
+              </div>
+              {participant.decklist ? (
+                <pre className="decklist">{participant.decklist}</pre>
+              ) : (
+                <p className="muted">No decklist entered.</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel panel-pad">
         <div className="section-title"><h2>Audit Log</h2><span className="pill">Version {draft.version}</span></div>
         <div className="list">
           {draft.auditLog.map((entry) => (

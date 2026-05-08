@@ -2,9 +2,10 @@ import Link from "next/link";
 import { CalendarDays, Filter, Plus, Trophy } from "lucide-react";
 import { DraftTable } from "@/components/DraftTable";
 import { FastEntryPanel } from "@/components/FastEntryPanel";
+import { LineChart } from "@/components/LineChart";
 import { StatTable } from "@/components/StatTable";
 import { getDrafts, getPlayers } from "@/lib/data";
-import { achievements, money, playerStats } from "@/lib/stats";
+import { achievements, money, percent, playerStats, playerTrendSeries } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export default async function DashboardPage() {
   const totalMatches = drafts.reduce((sum, draft) => sum + draft.matches.length, 0);
   const totalMoney = stats.reduce((sum, row) => sum + row.totalMoneyCents, 0);
   const achievementRows = achievements(stats, drafts);
+  const { winRateSeries, moneySeries } = playerTrendSeries(players, drafts);
 
   return (
     <>
@@ -51,6 +53,17 @@ export default async function DashboardPage() {
           <input aria-label="Minimum matches" placeholder="Min matches" />
           <select aria-label="Money results"><option>Any money result</option><option>Positive only</option><option>Negative only</option></select>
           <select aria-label="Win rate"><option>Any win rate</option><option>50%+</option><option>60%+</option></select>
+        </div>
+      </section>
+
+      <section className="grid split" style={{ marginTop: 18 }}>
+        <div className="panel panel-pad">
+          <div className="section-title"><h2>Match Win Percentage Over Time</h2><span className="pill">Top active players</span></div>
+          <LineChart series={winRateSeries} formatValue={percent} emptyLabel="Add match results to see win-rate trends." />
+        </div>
+        <div className="panel panel-pad">
+          <div className="section-title"><h2>Total Money Over Time</h2><span className="pill">Cumulative</span></div>
+          <LineChart series={moneySeries} formatValue={money} emptyLabel="Add money results to see cumulative totals." />
         </div>
       </section>
 
