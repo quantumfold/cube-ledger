@@ -2,7 +2,7 @@
 
 Cube Ledger is a private Magic: The Gathering Cube draft tracker for a playgroup. It records draft events, match results, sidebets, deck notes, money results, audit history, and long-term player stats.
 
-The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behind login, and users are matched to player accounts by email.
+The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behind login, and authenticated users are matched to player accounts by email.
 
 ## Features
 
@@ -21,6 +21,7 @@ The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behi
 - Audit log entries showing who submitted each draft change
 - Player profile page with selectable player, stats, graphs, draft history, format performance, and head-to-head records
 - Dashboard line graphs for match win percentage and money over time
+- Dashboard filters, leaderboard, recent draft history, and last-12-month achievements
 - Last-12-month achievements for best/worst win rate and most money won/lost
 
 ## Tech Stack
@@ -66,6 +67,8 @@ Open the app at the local URL printed by Next.js, usually [http://localhost:3000
 5. Run [docs/deck-images.sql](docs/deck-images.sql) to create the deck photo metadata table and private `deck-images` Storage bucket.
 6. Confirm the `users.email` values match the Google accounts players will use to log in.
 
+The `deck-images` bucket is private. The app creates short-lived signed URLs when draft detail pages are loaded, so deck photos are not public files.
+
 The main tables are:
 
 - `users`: player accounts, Google identity metadata, email, profile image, and role
@@ -75,8 +78,21 @@ The main tables are:
 - `match_results`: game wins, losses, draws, and correction metadata
 - `money_results`: manually entered net money result per draft participant
 - `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
-- `deck_images`: metadata for uploaded deck photos stored in Supabase Storage
+- `deck_images`: metadata for uploaded deck photos stored in the private Supabase Storage bucket
 - `offline_mutations`: planned storage for future offline sync/conflict handling
+
+## Deck Photos
+
+Deck photos are stored in Supabase Storage, not directly in Postgres.
+
+- Maximum 2 photos per draft participant
+- Maximum 2 MB per uploaded photo
+- Supported upload types: JPEG, PNG, WebP
+- Browser-side compression resizes photos before upload
+- Photo metadata is stored in `deck_images`
+- Photo files are stored in the private `deck-images` bucket
+- Draft detail pages show `Deck photo 1` and `Deck photo 2` links beside each player's decklist
+- Uploading or deleting a deck photo creates an audit log entry for the draft
 
 ## Google Auth Setup
 
@@ -110,7 +126,8 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 4. Deploy the project.
-5. In Supabase Authentication > URL Configuration, set:
+5. After changing environment variables, redeploy the project from Vercel Deployments.
+6. In Supabase Authentication > URL Configuration, set:
 
 ```text
 Site URL: https://your-vercel-domain.vercel.app
@@ -118,7 +135,13 @@ Redirect URLs:
 https://your-vercel-domain.vercel.app/auth/callback
 ```
 
-6. In Google Cloud Console, add the same production callback URL as an Authorized redirect URI.
+7. In Google Cloud Console, add the same production callback URL as an Authorized redirect URI.
+
+For the current production project, the live site is:
+
+```text
+https://cube-ledger.vercel.app
+```
 
 ## Common Commands
 
@@ -142,5 +165,6 @@ The current seed makes Lucas Siow an admin and everyone else an organizer.
 
 - Keep `SUPABASE_SERVICE_ROLE_KEY` private. Only store it in `.env.local` and Vercel environment variables.
 - Do not expose the service role key in browser code.
+- Deck photo uploads require `SUPABASE_SERVICE_ROLE_KEY` to be set in Vercel.
 - If Row Level Security is enabled later, add policies that allow authenticated playgroup members to read data and organizers/admins to write draft data.
 - Stats are derived from saved draft, participant, match, and money rows rather than stored as manual totals.
