@@ -3,8 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
+  const { next, error } = await searchParams;
   const cookieStore = await cookies();
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -32,6 +32,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         </div>
         <h1>Sign in to view Cube Ledger</h1>
         <p className="muted">Draft history, player stats, money results, and editing tools are private to the playgroup.</p>
+        {error ? <p className="auth-error">{error}</p> : null}
         <AuthButton />
       </section>
     </div>

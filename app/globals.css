@@ -94,6 +94,14 @@ a {
   white-space: nowrap;
 }
 
+.auth-error {
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: var(--bad);
+}
+
 .main {
   width: min(1440px, 100%);
   margin: 0 auto;
