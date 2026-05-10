@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudOff, Plus, Save } from "lucide-react";
+import { Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Player } from "@/lib/types";
@@ -22,7 +22,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   const [sidebetAmount, setSidebetAmount] = useState("$0");
   const [sidebetWinnerId, setSidebetWinnerId] = useState("");
   const [matchNotes, setMatchNotes] = useState("");
-  const [queued, setQueued] = useState(0);
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const selectedPlayers = useMemo(() => players.filter((player) => selected.includes(player.id)), [players, selected]);
@@ -74,7 +73,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not save draft");
-      setQueued(0);
       setStatus("Draft saved.");
       router.push(`/drafts/${result.id}`);
       router.refresh();
@@ -89,9 +87,8 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
     <section className="panel panel-pad">
       <div className="section-title">
         <h2>Fast Draft Entry</h2>
-        <span className="pill">Offline queue: {queued}</span>
+        <span className="pill">Online save</span>
       </div>
-      <div className="offline"><CloudOff size={16} /> Entries save locally first and sync with conflict checks when connection returns.</div>
       <div className="entry-grid" style={{ marginTop: 14 }}>
         <input aria-label="Draft title" value={title} onChange={(event) => setTitle(event.target.value)} />
         <input aria-label="Draft date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} />
@@ -157,7 +154,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
         <input aria-label="Match notes" placeholder="Notes" value={matchNotes} onChange={(event) => setMatchNotes(event.target.value)} />
       </div>
       <div className="inline-actions" style={{ marginTop: 14 }}>
-        <button type="button" onClick={() => setQueued((value) => value + 1)}><Plus size={16} /> Queue match</button>
         <button type="button" className="primary" disabled={isSaving} onClick={saveDraft}><Save size={16} /> {isSaving ? "Saving..." : "Save draft"}</button>
       </div>
       {status ? <p className="muted" role="status">{status}</p> : null}

@@ -1,4 +1,4 @@
-import { Achievement, DraftEvent, HeadToHead, Player, PlayerStats, Standing } from "./types";
+import type { Achievement, DraftEvent, HeadToHead, Player, PlayerStats, Standing } from "./types.ts";
 
 export function money(cents: number) {
   const sign = cents > 0 ? "+" : cents < 0 ? "-" : "";

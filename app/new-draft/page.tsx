@@ -18,7 +18,7 @@ export default async function NewDraftPage() {
           <div className="list-item"><span>Team draft setup</span><strong>Two teams</strong></div>
           <div className="list-item"><span>Conflict handling</span><strong>Version check</strong></div>
         </div>
-        <p className="muted">This form models the fast mobile entry workflow. In production it writes queued mutations to IndexedDB, then syncs through the API with audit log entries.</p>
+        <p className="muted">Create a draft, assign players, add an initial result, and save it directly to Supabase with audit log entries.</p>
       </section>
     </div>
   );

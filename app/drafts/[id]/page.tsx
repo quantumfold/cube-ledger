@@ -109,7 +109,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
               {(participant.deckImages ?? []).length ? (
                 <div className="deck-photo-links">
                   {(participant.deckImages ?? []).map((image, index) => (
-                    <a key={image.id} href={image.signedUrl} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
+                    <a key={image.id} href={`/deck-images/${image.id}`} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
                   ))}
                 </div>
               ) : (

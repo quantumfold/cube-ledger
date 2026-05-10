@@ -1,0 +1,69 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { headToHeadForPlayer, playerStats, standingsForDraft } from "../lib/stats.ts";
+import type { DraftEvent, Player } from "../lib/types.ts";
+
+const players: Player[] = [
+  { id: "p1", displayName: "Lucas", email: "lucas@example.com", role: "admin" },
+  { id: "p2", displayName: "David", email: "david@example.com", role: "organizer" }
+];
+
+const draft: DraftEvent = {
+  id: "d1",
+  title: "Test Draft",
+  eventDate: "2026-05-01",
+  format: "Individual",
+  draftType: "Vintage",
+  defaultStakeCents: 5000,
+  notes: "",
+  createdBy: "p1",
+  version: 1,
+  participants: [
+    { id: "dp1", draftEventId: "d1", playerId: "p1", displayNameSnapshot: "Lucas", seatOrder: 1, deckArchetype: "Control", colors: ["U"], strategy: "", deckNotes: "" },
+    { id: "dp2", draftEventId: "d1", playerId: "p2", displayNameSnapshot: "David", seatOrder: 2, deckArchetype: "Aggro", colors: ["R"], strategy: "", deckNotes: "" }
+  ],
+  matches: [
+    {
+      id: "m1",
+      draftEventId: "d1",
+      roundLabel: "Round 1",
+      playerAId: "dp1",
+      playerBId: "dp2",
+      playerAWins: 2,
+      playerBWins: 1,
+      draws: 0,
+      sidebetCents: 1000,
+      sidebetWinnerParticipantId: "dp1"
+    }
+  ],
+  moneyResults: [
+    { id: "mr1", draftEventId: "d1", participantId: "dp1", netCents: 5000 },
+    { id: "mr2", draftEventId: "d1", participantId: "dp2", netCents: -5000 }
+  ],
+  auditLog: []
+};
+
+test("standings roll up match records, games, and sidebets", () => {
+  const standings = standingsForDraft(draft);
+  assert.equal(standings[0].playerId, "p1");
+  assert.equal(standings[0].matchWins, 1);
+  assert.equal(standings[0].gamesWon, 2);
+  assert.equal(standings[0].moneyCents, 6000);
+  assert.equal(standings[1].moneyCents, -6000);
+});
+
+test("player stats derive totals from draft data", () => {
+  const stats = playerStats(players, [draft]);
+  const lucas = stats.find((row) => row.playerId === "p1");
+  assert.equal(lucas?.draftsPlayed, 1);
+  assert.equal(lucas?.matchesPlayed, 1);
+  assert.equal(lucas?.winRate, 1);
+  assert.equal(lucas?.totalMoneyCents, 6000);
+});
+
+test("head-to-head records derive match outcomes", () => {
+  const rows = headToHeadForPlayer("p1", players, [draft]);
+  assert.equal(rows[0].opponentId, "p2");
+  assert.equal(rows[0].wins, 1);
+  assert.equal(rows[0].losses, 0);
+});

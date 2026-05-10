@@ -15,7 +15,7 @@ export async function getPlayers(): Promise<Player[]> {
   if (!supabase) return seedPlayers;
 
   const { data, error } = await supabase.from("users").select("*").order("display_name");
-  if (error) return seedPlayers;
+  if (error) return fallbackPlayers();
   if (data) return data.map(mapPlayer);
   return [];
 }
@@ -24,8 +24,13 @@ export async function getDrafts(): Promise<DraftEvent[]> {
   const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
   if (!supabase) return seedDrafts;
 
-  const { data, error } = await supabase.from("draft_events").select(draftSelect).order("event_date", { ascending: false });
-  if (error) return seedDrafts;
+  let { data, error } = await supabase.from("draft_events").select(draftSelect).is("deleted_at", null).order("event_date", { ascending: false });
+  if (error && isMissingSoftDeleteColumn(error.message)) {
+    const retry = await supabase.from("draft_events").select(draftSelect).order("event_date", { ascending: false });
+    data = retry.data;
+    error = retry.error;
+  }
+  if (error) return fallbackDrafts();
   if (data) {
     const drafts = data.map(mapDraft);
     const draftIds = drafts.map((draft) => draft.id);
@@ -39,11 +44,28 @@ export async function getDraft(id: string): Promise<DraftEvent | undefined> {
   const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
   if (!supabase) return seedDrafts.find((draft) => draft.id === id);
 
-  const { data, error } = await supabase.from("draft_events").select(draftSelect).eq("id", id).single();
-  if (error || !data) return seedDrafts.find((draft) => draft.id === id);
+  let { data, error } = await supabase.from("draft_events").select(draftSelect).eq("id", id).is("deleted_at", null).single();
+  if (error && isMissingSoftDeleteColumn(error.message)) {
+    const retry = await supabase.from("draft_events").select(draftSelect).eq("id", id).single();
+    data = retry.data;
+    error = retry.error;
+  }
+  if (error || !data) return fallbackDrafts().find((draft) => draft.id === id);
   const draft = mapDraft(data);
   const [auditLogs, deckImages] = await Promise.all([getAuditLogsForDrafts([draft.id]), getDeckImagesForDrafts([draft.id])]);
   return attachDeckImages({ ...draft, auditLog: auditLogs.get(draft.id) ?? [] }, deckImages);
+}
+
+function fallbackPlayers() {
+  return process.env.NODE_ENV === "production" ? [] : seedPlayers;
+}
+
+function fallbackDrafts() {
+  return process.env.NODE_ENV === "production" ? [] : seedDrafts;
+}
+
+function isMissingSoftDeleteColumn(message: string) {
+  return message.includes("deleted_at") || message.includes("schema cache");
 }
 
 function attachDeckImages(draft: DraftEvent, imagesByParticipantId: Map<string, DeckImage[]>) {

@@ -8,11 +8,25 @@ import { achievements, money, percent, playerStats, playerTrendSeries } from "@/
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+type DashboardSearchParams = {
+  start?: string;
+  end?: string;
+  format?: string;
+  draftType?: string;
+  playerId?: string;
+  minDrafts?: string;
+  minMatches?: string;
+  money?: string;
+  winRate?: string;
+};
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
+  const filters = await searchParams;
   const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
-  const stats = playerStats(players, drafts).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
-  const achievementRows = achievements(stats, drafts);
-  const { winRateSeries, moneySeries } = playerTrendSeries(players, drafts);
+  const filteredDrafts = filterDrafts(drafts, filters);
+  const stats = filterStats(playerStats(players, filteredDrafts), filters).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
+  const achievementRows = achievements(stats, filteredDrafts);
+  const { winRateSeries, moneySeries } = playerTrendSeries(players, filteredDrafts);
 
   return (
     <>
@@ -32,17 +46,19 @@ export default async function DashboardPage() {
           <h2>Dashboard Filters</h2>
           <Filter size={18} />
         </div>
-        <div className="filters">
-          <input type="date" aria-label="Start date" defaultValue="2026-04-01" />
-          <input type="date" aria-label="End date" defaultValue="2026-05-05" />
-          <select aria-label="Draft format"><option>All formats</option><option>Individual</option><option>Team</option></select>
-          <select aria-label="Draft type"><option>All draft types</option><option>Vintage</option><option>Andrew Cube</option><option>Morgan Cube</option></select>
-          <select aria-label="Player"><option>All players</option>{players.map((player) => <option key={player.id}>{player.displayName}</option>)}</select>
-          <input aria-label="Minimum drafts" placeholder="Min drafts" />
-          <input aria-label="Minimum matches" placeholder="Min matches" />
-          <select aria-label="Money results"><option>Any money result</option><option>Positive only</option><option>Negative only</option></select>
-          <select aria-label="Win rate"><option>Any win rate</option><option>50%+</option><option>60%+</option></select>
-        </div>
+        <form className="filters">
+          <input name="start" type="date" aria-label="Start date" defaultValue={filters.start ?? ""} />
+          <input name="end" type="date" aria-label="End date" defaultValue={filters.end ?? ""} />
+          <select name="format" aria-label="Draft format" defaultValue={filters.format ?? ""}><option value="">All formats</option><option>Individual</option><option>Team</option></select>
+          <select name="draftType" aria-label="Draft type" defaultValue={filters.draftType ?? ""}><option value="">All draft types</option><option>Vintage</option><option>Andrew Cube</option><option>Morgan Cube</option></select>
+          <select name="playerId" aria-label="Player" defaultValue={filters.playerId ?? ""}><option value="">All players</option>{players.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
+          <input name="minDrafts" aria-label="Minimum drafts" placeholder="Min drafts" defaultValue={filters.minDrafts ?? ""} />
+          <input name="minMatches" aria-label="Minimum matches" placeholder="Min matches" defaultValue={filters.minMatches ?? ""} />
+          <select name="money" aria-label="Money results" defaultValue={filters.money ?? ""}><option value="">Any money result</option><option value="positive">Positive only</option><option value="negative">Negative only</option></select>
+          <select name="winRate" aria-label="Win rate" defaultValue={filters.winRate ?? ""}><option value="">Any win rate</option><option value="0.5">50%+</option><option value="0.6">60%+</option></select>
+          <button type="submit" className="primary">Apply</button>
+          <Link className="button" href="/">Reset</Link>
+        </form>
       </section>
 
       <section className="grid split" style={{ marginTop: 18 }}>
@@ -79,8 +95,34 @@ export default async function DashboardPage() {
 
       <section className="panel panel-pad" style={{ marginTop: 18 }}>
         <div className="section-title"><h2>Recent Draft History</h2><Link href="/drafts">View all</Link></div>
-        <DraftTable drafts={drafts} />
+        <DraftTable drafts={filteredDrafts} />
       </section>
     </>
   );
+}
+
+function filterDrafts(drafts: Awaited<ReturnType<typeof getDrafts>>, filters: DashboardSearchParams) {
+  return drafts.filter((draft) => {
+    if (filters.start && draft.eventDate < filters.start) return false;
+    if (filters.end && draft.eventDate > filters.end) return false;
+    if (filters.format && draft.format !== filters.format) return false;
+    if (filters.draftType && draft.draftType !== filters.draftType) return false;
+    if (filters.playerId && !draft.participants.some((participant) => participant.playerId === filters.playerId)) return false;
+    return true;
+  });
+}
+
+function filterStats(stats: ReturnType<typeof playerStats>, filters: DashboardSearchParams) {
+  const minDrafts = Number.parseInt(filters.minDrafts ?? "", 10);
+  const minMatches = Number.parseInt(filters.minMatches ?? "", 10);
+  const minWinRate = Number.parseFloat(filters.winRate ?? "");
+  return stats.filter((row) => {
+    if (filters.playerId && row.playerId !== filters.playerId) return false;
+    if (Number.isFinite(minDrafts) && row.draftsPlayed < minDrafts) return false;
+    if (Number.isFinite(minMatches) && row.matchesPlayed < minMatches) return false;
+    if (filters.money === "positive" && row.totalMoneyCents <= 0) return false;
+    if (filters.money === "negative" && row.totalMoneyCents >= 0) return false;
+    if (Number.isFinite(minWinRate) && row.winRate < minWinRate) return false;
+    return true;
+  });
 }

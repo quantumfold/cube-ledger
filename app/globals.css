@@ -210,6 +210,13 @@ button.danger:focus-visible {
   flex-wrap: wrap;
 }
 
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
 select,
 input {
   padding: 7px 10px;

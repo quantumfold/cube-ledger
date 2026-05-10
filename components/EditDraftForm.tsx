@@ -27,6 +27,13 @@ type MatchEdit = {
   notes: string;
 };
 
+type NewMatchEdit = Omit<MatchEdit, "id"> & {
+  clientId: string;
+  playerAId: string;
+  playerBId: string;
+  roundLabel: string;
+};
+
 export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const router = useRouter();
   const [title, setTitle] = useState(draft.title);
@@ -59,6 +66,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
     sidebetWinnerParticipantId: match.sidebetWinnerParticipantId ?? "",
     notes: match.notes ?? ""
   })));
+  const [newMatches, setNewMatches] = useState<NewMatchEdit[]>([]);
+  const [removedMatchIds, setRemovedMatchIds] = useState<string[]>([]);
+  const [activeEditSection, setActiveEditSection] = useState<"details" | "players" | "matches" | "photos">("details");
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -94,7 +104,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
           defaultStake: stake,
           notes,
           participants,
-          matches
+          matches: matches.filter((match) => !removedMatchIds.includes(match.id)),
+          removedMatchIds,
+          newMatches
         })
       });
       const result = await response.json();
@@ -186,6 +198,28 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
     }
   }
 
+  function addNewMatch() {
+    setNewMatches((current) => [
+      ...current,
+      {
+        clientId: crypto.randomUUID(),
+        playerAId: draft.participants[0]?.id ?? "",
+        playerBId: draft.participants[1]?.id ?? draft.participants[0]?.id ?? "",
+        roundLabel: `Round ${current.length + matches.length + 1}`,
+        playerAWins: "2",
+        playerBWins: "1",
+        draws: "0",
+        sidebet: "0",
+        sidebetWinnerParticipantId: "",
+        notes: ""
+      }
+    ]);
+  }
+
+  function updateNewMatch(clientId: string, patch: Partial<NewMatchEdit>) {
+    setNewMatches((current) => current.map((match) => match.clientId === clientId ? { ...match, ...patch } : match));
+  }
+
   return (
     <div className="grid" style={{ gap: 18 }}>
       <section className="panel panel-pad">
@@ -198,7 +232,19 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
             <button type="button" className="primary" onClick={save} disabled={isSaving}><Save size={16} /> {isSaving ? "Saving..." : "Save changes"}</button>
           </div>
         </div>
-        <div className="entry-grid">
+        <div className="tabs">
+          {[
+            ["details", "Draft Info"],
+            ["players", "Players & Money"],
+            ["matches", "Matches"],
+            ["photos", "Decklists & Photos"]
+          ].map(([id, label]) => (
+            <button key={id} type="button" className={activeEditSection === id ? "primary" : ""} onClick={() => setActiveEditSection(id as typeof activeEditSection)}>{label}</button>
+          ))}
+        </div>
+        {activeEditSection === "details" ? (
+        <>
+          <div className="entry-grid">
           <input aria-label="Draft title" value={title} onChange={(event) => setTitle(event.target.value)} />
           <input aria-label="Draft date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} />
           <select aria-label="Format" value={format} onChange={(event) => setFormat(event.target.value as DraftEvent["format"])}>
@@ -218,12 +264,14 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
               <option value="B">Team B won</option>
             </select>
           ) : null}
-        </div>
-        <textarea aria-label="Draft notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} style={{ marginTop: 12, width: "100%" }} />
+          </div>
+          <textarea aria-label="Draft notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={4} style={{ marginTop: 12, width: "100%" }} />
+        </>
+        ) : null}
         {status ? <p className="muted" role="status">{status}</p> : null}
       </section>
 
-      <section className="panel panel-pad">
+      {activeEditSection === "players" ? <section className="panel panel-pad">
         <div className="section-title"><h2>Participants, Decks, Money</h2></div>
         <div className="table-wrap">
           <table>
@@ -250,9 +298,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
             </tbody>
           </table>
         </div>
-      </section>
+      </section> : null}
 
-      <section className="panel panel-pad">
+      {activeEditSection === "photos" ? <section className="panel panel-pad">
         <div className="section-title"><h2>Decklists</h2><span className="pill">Optional</span></div>
         <div className="grid">
           {participants.map((participant) => (
@@ -286,7 +334,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                 <div className="deck-photo-links">
                   {(deckImagesByParticipant[participant.id] ?? []).map((image, index) => (
                     <span key={image.id} className="deck-photo-link">
-                      <a href={image.signedUrl} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
+                      <a href={`/deck-images/${image.id}`} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
                       <button type="button" className="text-button" onClick={() => void deleteDeckPhoto(participant.id, image.id)}>Remove</button>
                     </span>
                   ))}
@@ -297,15 +345,18 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
             </div>
           ))}
         </div>
-      </section>
+      </section> : null}
 
-      <section className="panel panel-pad">
-        <div className="section-title"><h2>Existing Matches</h2></div>
+      {activeEditSection === "matches" ? <section className="panel panel-pad">
+        <div className="section-title">
+          <h2>Matches</h2>
+          <button type="button" onClick={addNewMatch}>Add match</button>
+        </div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Match</th><th>A Wins</th><th>B Wins</th><th>Draws</th><th>Sidebet</th><th>Sidebet Winner</th><th>Notes</th></tr></thead>
+            <thead><tr><th>Match</th><th>A Wins</th><th>B Wins</th><th>Draws</th><th>Sidebet</th><th>Sidebet Winner</th><th>Notes</th><th>Remove</th></tr></thead>
             <tbody>
-              {matches.map((match) => {
+              {matches.filter((match) => !removedMatchIds.includes(match.id)).map((match) => {
                 const source = draft.matches.find((item) => item.id === match.id);
                 const a = participantNames.get(source?.playerAId ?? "");
                 const b = participantNames.get(source?.playerBId ?? "");
@@ -324,13 +375,44 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                       </select>
                     </td>
                     <td><input value={match.notes} onChange={(event) => updateMatch(match.id, { notes: event.target.value })} /></td>
+                    <td><button type="button" className="text-button" onClick={() => setRemovedMatchIds((current) => [...current, match.id])}>Remove</button></td>
+                  </tr>
+                );
+              })}
+              {newMatches.map((match) => {
+                const a = participantNames.get(match.playerAId);
+                const b = participantNames.get(match.playerBId);
+                return (
+                  <tr key={match.clientId}>
+                    <td>
+                      <input value={match.roundLabel} onChange={(event) => updateNewMatch(match.clientId, { roundLabel: event.target.value })} />
+                      <select value={match.playerAId} onChange={(event) => updateNewMatch(match.clientId, { playerAId: event.target.value })}>
+                        {draft.participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.displayNameSnapshot}</option>)}
+                      </select>
+                      <select value={match.playerBId} onChange={(event) => updateNewMatch(match.clientId, { playerBId: event.target.value })}>
+                        {draft.participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.displayNameSnapshot}</option>)}
+                      </select>
+                    </td>
+                    <td><input value={match.playerAWins} onChange={(event) => updateNewMatch(match.clientId, { playerAWins: event.target.value })} /></td>
+                    <td><input value={match.playerBWins} onChange={(event) => updateNewMatch(match.clientId, { playerBWins: event.target.value })} /></td>
+                    <td><input value={match.draws} onChange={(event) => updateNewMatch(match.clientId, { draws: event.target.value })} /></td>
+                    <td><input value={match.sidebet} onChange={(event) => updateNewMatch(match.clientId, { sidebet: event.target.value })} /></td>
+                    <td>
+                      <select value={match.sidebetWinnerParticipantId} onChange={(event) => updateNewMatch(match.clientId, { sidebetWinnerParticipantId: event.target.value })}>
+                        <option value="">None</option>
+                        <option value={match.playerAId}>{a}</option>
+                        <option value={match.playerBId}>{b}</option>
+                      </select>
+                    </td>
+                    <td><input value={match.notes} onChange={(event) => updateNewMatch(match.clientId, { notes: event.target.value })} /></td>
+                    <td><button type="button" className="text-button" onClick={() => setNewMatches((current) => current.filter((item) => item.clientId !== match.clientId))}>Remove</button></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-      </section>
+      </section> : null}
 
       <p className="muted">Deleting a draft permanently removes its participants, matches, match results, money results, and audit entries.</p>
     </div>

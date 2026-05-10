@@ -58,7 +58,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         colors: participant.colors,
         strategy: participant.strategy,
         deck_notes: participant.deckNotes,
-        decklist: participant.decklist
+        decklist: participant.decklist,
+        updated_by: changedBy,
+        updated_at: new Date().toISOString()
       })
       .eq("id", participant.id)
       .eq("draft_event_id", id);
@@ -83,7 +85,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       .update({
         sidebet_cents: match.sidebetCents,
         sidebet_winner_participant_id: match.sidebetWinnerParticipantId,
-        notes: match.notes
+        notes: match.notes,
+        updated_by: changedBy,
+        updated_at: new Date().toISOString()
       })
       .eq("id", match.id)
       .eq("draft_event_id", id);
@@ -95,11 +99,53 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         player_a_wins: match.playerAWins,
         player_b_wins: match.playerBWins,
         draws: match.draws,
+        updated_by: changedBy,
+        updated_at: new Date().toISOString(),
         corrected_by: changedBy,
         corrected_at: new Date().toISOString()
       })
       .eq("match_id", match.id);
     if (resultError) return NextResponse.json({ error: resultError.message }, { status: 500 });
+  }
+
+  if (payload.removedMatchIds.length) {
+    const { error: removeError } = await supabase
+      .from("matches")
+      .delete()
+      .eq("draft_event_id", id)
+      .in("id", payload.removedMatchIds);
+    if (removeError) return NextResponse.json({ error: removeError.message }, { status: 500 });
+  }
+
+  for (const match of payload.newMatches) {
+    const { data: createdMatch, error: createMatchError } = await supabase
+      .from("matches")
+      .insert({
+        draft_event_id: id,
+        round_label: match.roundLabel,
+        player_a_id: match.playerAId,
+        player_b_id: match.playerBId,
+        sidebet_cents: match.sidebetCents,
+        sidebet_winner_participant_id: match.sidebetWinnerParticipantId,
+        notes: match.notes,
+        created_by: changedBy,
+        updated_by: changedBy
+      })
+      .select("id")
+      .single();
+    if (createMatchError || !createdMatch) return NextResponse.json({ error: createMatchError?.message ?? "Could not add match" }, { status: 500 });
+
+    const { error: createResultError } = await supabase.from("match_results").insert({
+      match_id: createdMatch.id,
+      player_a_wins: match.playerAWins,
+      player_b_wins: match.playerBWins,
+      draws: match.draws,
+      created_by: changedBy,
+      updated_by: changedBy,
+      corrected_by: changedBy,
+      corrected_at: new Date().toISOString()
+    });
+    if (createResultError) return NextResponse.json({ error: createResultError.message }, { status: 500 });
   }
 
   const after = {
@@ -111,7 +157,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     defaultStakeCents: payload.defaultStakeCents,
     notes: payload.notes,
     participants: payload.participants,
-    matches: payload.matches
+    matches: payload.matches,
+    removedMatchIds: payload.removedMatchIds,
+    newMatches: payload.newMatches
   };
 
   await supabase.from("audit_log").insert({
@@ -132,12 +180,27 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   if (!draft) return NextResponse.json({ error: "Draft not found" }, { status: 404 });
   const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
   if (!supabase) return NextResponse.json({ error: "Supabase is not configured" }, { status: 500 });
+  const currentUser = await getCurrentAppUser();
+  const changedBy = currentUser?.id ?? draft.createdBy;
 
-  const { error: auditError } = await supabase.from("audit_log").delete().eq("entity_type", "DraftEvent").eq("entity_id", id);
-  if (auditError) return NextResponse.json({ error: auditError.message }, { status: 500 });
-
-  const { error } = await supabase.from("draft_events").delete().eq("id", id);
+  const { error } = await supabase
+    .from("draft_events")
+    .update({
+      deleted_at: new Date().toISOString(),
+      deleted_by: changedBy,
+      updated_by: changedBy,
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await supabase.from("audit_log").insert({
+    entity_type: "DraftEvent",
+    entity_id: id,
+    action: "deleted",
+    changed_by: changedBy,
+    before: snapshotDraft(draft)
+  });
 
   return NextResponse.json({ status: "deleted", id });
 }
@@ -171,6 +234,18 @@ type EditPayload = {
     sidebetWinnerParticipantId: string | null;
     notes: string;
   }>;
+  removedMatchIds: string[];
+  newMatches: Array<{
+    playerAId: string;
+    playerBId: string;
+    roundLabel: string;
+    playerAWins: number;
+    playerBWins: number;
+    draws: number;
+    sidebetCents: number;
+    sidebetWinnerParticipantId: string | null;
+    notes: string;
+  }>;
 };
 
 function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof getDraft>>): { value: EditPayload; error?: never } | { value?: never; error: string } {
@@ -193,10 +268,10 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   if (!["Vintage", "Andrew Cube", "Morgan Cube"].includes(draftType)) return { error: "Draft type is required" };
   if (defaultStakeCents < 0) return { error: "Stake cannot be negative" };
 
-  const participantIds = new Set(draft.participants.map((participant) => participant.id));
+  const participantIdSet = new Set(draft.participants.map((participant) => participant.id));
   const rawParticipants = Array.isArray(data.participants) ? data.participants : [];
   const participants = rawParticipants.map((raw) => {
-    if (!isRecord(raw) || typeof raw.id !== "string" || !participantIds.has(raw.id)) return null;
+    if (!isRecord(raw) || typeof raw.id !== "string" || !participantIdSet.has(raw.id)) return null;
     const team = raw.team === "A" || raw.team === "B" ? raw.team : null;
     if (format === "Team" && !team) return null;
     return {
@@ -217,6 +292,9 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   }
 
   const matchIds = new Set(draft.matches.map((match) => match.id));
+  const removedMatchIds = Array.isArray(data.removedMatchIds)
+    ? [...new Set(data.removedMatchIds.filter((id): id is string => typeof id === "string" && matchIds.has(id)))]
+    : [];
   const rawMatches = Array.isArray(data.matches) ? data.matches : [];
   const matchById = new Map(draft.matches.map((match) => [match.id, match]));
   const matches = rawMatches.map((raw) => {
@@ -242,7 +320,40 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   });
 
   if (matches.some((match) => !match) || matches.length !== draft.matches.length) {
-    return { error: "All existing matches must be included and valid" };
+    if (matches.some((match) => !match) || matches.length + removedMatchIds.length !== draft.matches.length) {
+      return { error: "All existing matches must be included, removed, and valid" };
+    }
+  }
+
+  const rawNewMatches = Array.isArray(data.newMatches) ? data.newMatches : [];
+  const newMatches = rawNewMatches.map((raw) => {
+    if (!isRecord(raw)) return null;
+    const playerAId = typeof raw.playerAId === "string" ? raw.playerAId : "";
+    const playerBId = typeof raw.playerBId === "string" ? raw.playerBId : "";
+    const playerAWins = parseWholeNumber(raw.playerAWins);
+    const playerBWins = parseWholeNumber(raw.playerBWins);
+    const draws = parseWholeNumber(raw.draws);
+    const sidebetCents = parseCents(raw.sidebet);
+    const sidebetWinnerParticipantId = typeof raw.sidebetWinnerParticipantId === "string" && raw.sidebetWinnerParticipantId ? raw.sidebetWinnerParticipantId : null;
+    if (!participantIdSet.has(playerAId) || !participantIdSet.has(playerBId) || playerAId === playerBId) return null;
+    if (playerAWins < 0 || playerBWins < 0 || draws < 0 || sidebetCents < 0) return null;
+    if (sidebetWinnerParticipantId && ![playerAId, playerBId].includes(sidebetWinnerParticipantId)) return null;
+    if (sidebetCents > 0 && !sidebetWinnerParticipantId) return null;
+    return {
+      playerAId,
+      playerBId,
+      roundLabel: typeof raw.roundLabel === "string" && raw.roundLabel.trim() ? raw.roundLabel.trim() : "Match",
+      playerAWins,
+      playerBWins,
+      draws,
+      sidebetCents,
+      sidebetWinnerParticipantId,
+      notes: typeof raw.notes === "string" ? raw.notes.trim() : ""
+    };
+  });
+
+  if (newMatches.some((match) => !match)) {
+    return { error: "New matches must include two different players and valid results" };
   }
 
   return {
@@ -256,7 +367,9 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
       defaultStakeCents,
       notes,
       participants: participants as EditPayload["participants"],
-      matches: matches as EditPayload["matches"]
+      matches: matches as EditPayload["matches"],
+      removedMatchIds,
+      newMatches: newMatches as EditPayload["newMatches"]
     }
   };
 }

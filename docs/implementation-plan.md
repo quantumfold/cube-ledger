@@ -2,7 +2,7 @@
 
 ## Product Scope
 
-Cube Ledger tracks Magic: The Gathering Cube draft sessions, match results, deck notes, money results, and long-term playgroup statistics. It supports variable player counts, custom draft formats, manual corrections, audit history, and offline-friendly entry.
+Cube Ledger tracks Magic: The Gathering Cube draft sessions, match results, deck notes, money results, and long-term playgroup statistics. It supports variable player counts, custom draft formats, manual corrections, and audit history.
 
 ## Database Schema
 
@@ -30,6 +30,8 @@ create table draft_events (
   notes text,
   created_by uuid references users(id),
   updated_by uuid references users(id),
+  deleted_at timestamptz,
+  deleted_by uuid references users(id),
   version integer not null default 1,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -47,7 +49,10 @@ create table draft_participants (
   deck_notes text,
   decklist text,
   team text check (team in ('A', 'B')),
+  created_by uuid references users(id),
+  updated_by uuid references users(id),
   created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
   unique (draft_event_id, user_id)
 );
 
@@ -61,7 +66,10 @@ create table matches (
   sidebet_cents integer not null default 0 check (sidebet_cents >= 0),
   sidebet_winner_participant_id uuid references draft_participants(id),
   notes text,
-  created_at timestamptz not null default now()
+  created_by uuid references users(id),
+  updated_by uuid references users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 create table match_results (
@@ -70,8 +78,11 @@ create table match_results (
   player_a_wins integer not null check (player_a_wins >= 0),
   player_b_wins integer not null check (player_b_wins >= 0),
   draws integer not null default 0 check (draws >= 0),
+  created_by uuid references users(id),
+  updated_by uuid references users(id),
   corrected_by uuid references users(id),
-  corrected_at timestamptz
+  corrected_at timestamptz,
+  updated_at timestamptz not null default now()
 );
 
 create table money_results (
@@ -80,6 +91,7 @@ create table money_results (
   draft_participant_id uuid not null references draft_participants(id),
   net_cents integer not null default 0,
   notes text,
+  created_by uuid references users(id),
   updated_by uuid references users(id),
   updated_at timestamptz not null default now(),
   unique (draft_event_id, draft_participant_id)
@@ -106,23 +118,13 @@ create table deck_images (
   mime_type text not null,
   file_size_bytes integer not null check (file_size_bytes > 0 and file_size_bytes <= 2097152),
   caption text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  updated_by uuid references users(id),
+  updated_at timestamptz not null default now()
 );
 
 create index deck_images_participant_idx on deck_images (draft_participant_id, created_at);
 
-create table offline_mutations (
-  id uuid primary key,
-  client_id text not null,
-  user_id uuid references users(id),
-  draft_event_id uuid references draft_events(id),
-  mutation_type text not null,
-  payload jsonb not null,
-  base_version integer,
-  status text not null default 'pending',
-  created_at timestamptz not null default now(),
-  applied_at timestamptz
-);
 ```
 
 ## API Routes
@@ -131,16 +133,18 @@ create table offline_mutations (
 - `GET /api/drafts`: list draft history with participants, standings, and money summaries.
 - `POST /api/drafts`: create a draft event with participants and default money rows.
 - `GET /api/drafts/:id`: draft detail, matches, standings, money, audit log.
-- `PATCH /api/drafts/:id`: update draft details, participants, deck notes, match results, money results, and notes.
+- `PATCH /api/drafts/:id`: update draft details, participants, deck notes, match results, money results, add/remove matches, and notes.
+- `DELETE /api/drafts/:id`: soft-delete a draft and record the deletion in the audit log.
+- `GET /deck-images/:id`: authorize a deck image request and redirect to a fresh signed Storage URL.
 - `GET /api/stats`: aggregate dashboard stats with filters.
-- Future Supabase routes: `/api/sync/push`, `/api/sync/pull`, `/api/audit`, `/api/auth/callback`.
+- Future Supabase routes: `/api/audit`, role-management APIs, and richer player-management APIs.
 
 ## Main UI Screens
 
-- Dashboard: filterable KPI summary, leaderboard, best/worst performers, achievements, and recent drafts.
+- Dashboard: filterable leaderboard, trends, best/worst performers, achievements, and recent drafts.
 - Draft History: dense table of all drafts with date, team/individual format, draft type, winner, player count, and money pool.
-- Draft Detail: event metadata, player decks, match results, final standings, money results, audit log, and organizer edit action.
-- New Draft: fast entry flow with title/date/team-or-individual format/draft type/stake, player picker, team assignment when relevant, archetypes, matches, sidebets, and money adjustments.
+- Draft Detail: event metadata, player decks, match results, final standings, money results, deck photo links, audit log, and organizer edit action.
+- New Draft: fast entry flow with title/date/team-or-individual format/draft type/stake, player picker, team assignment when relevant, initial match, and sidebet.
 - Player Profile: overall record, money trend, format breakdown, head-to-head records, draft history, and achievements.
 - Match History: searchable table of player A/B records and notes.
 - Money Summary: lifetime net, average per draft, biggest swings, and per-draft adjustments.
@@ -150,7 +154,7 @@ create table offline_mutations (
 - `player`: can view dashboard, drafts, profiles, and own historical data.
 - `organizer`: can create drafts, enter results, edit draft details, and correct money/match entries.
 - `admin`: full organizer permissions plus role management and audit review.
-- Edits require optimistic concurrency through `draft_events.version`; conflicting offline edits are surfaced for manual resolution.
+- Edits require optimistic concurrency through `draft_events.version`; conflicting edits are surfaced for manual resolution.
 
 ## Validation Rules
 
@@ -164,14 +168,8 @@ create table offline_mutations (
 - Draft standings and lifetime money include manual money results plus match sidebet wins/losses.
 - Participant display names are snapshotted to preserve history after profile changes.
 - Each draft participant can have at most two uploaded deck photos. Photos are stored in the private `deck-images` Supabase Storage bucket and referenced by `deck_images.storage_path`.
+- Draft deletion is soft-delete. Deleted drafts are excluded from app reads but remain available for audit review in the database.
 - Statistics are derived from saved matches, participants, and money rows rather than manually stored totals.
-
-## Offline Strategy
-
-- The mobile entry flow stores pending mutations in IndexedDB/localStorage when offline.
-- Each mutation includes draft id, client id, operation id, and base draft version.
-- Sync pushes pending mutations when the connection returns.
-- If the server version changed, the API returns a conflict showing local and remote values for review.
 
 ## Seed Data
 
@@ -184,7 +182,7 @@ The app ships with sample players, drafts, matches, money results, archetypes, a
 3. Build API routes matching the persistence contract.
 4. Build dashboard filters and dense stat tables.
 5. Build draft history, draft detail, and player profile screens.
-6. Add new draft/result-entry UI with offline queue indicator.
+6. Add new draft/result-entry UI.
 7. Add Google OAuth and Supabase/Postgres persistence.
 8. Add audit triggers, conflict resolution UI, and production validation.
 9. Add tests for stat derivation, validation, and API mutations.

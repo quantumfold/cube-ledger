@@ -60,7 +60,9 @@ export async function POST(request: Request) {
       deck_archetype: "",
       colors: [],
       strategy: "",
-      deck_notes: ""
+      deck_notes: "",
+      created_by: createdBy,
+      updated_by: createdBy
     };
   });
 
@@ -77,6 +79,7 @@ export async function POST(request: Request) {
       draft_event_id: draft.id,
       draft_participant_id: participant.id,
       net_cents: 0,
+      created_by: createdBy,
       updated_by: createdBy
     })));
 
@@ -104,7 +107,9 @@ export async function POST(request: Request) {
         player_b_id: playerBParticipantId,
         sidebet_cents: payload.initialMatch.sidebetCents,
         sidebet_winner_participant_id: sidebetWinnerParticipantId,
-        notes: payload.initialMatch.notes
+        notes: payload.initialMatch.notes,
+        created_by: createdBy,
+        updated_by: createdBy
       })
       .select("id")
       .single();
@@ -116,6 +121,8 @@ export async function POST(request: Request) {
       player_a_wins: payload.initialMatch.playerAWins,
       player_b_wins: payload.initialMatch.playerBWins,
       draws: payload.initialMatch.draws,
+      created_by: createdBy,
+      updated_by: createdBy,
       corrected_by: createdBy,
       corrected_at: new Date().toISOString()
     });

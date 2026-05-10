@@ -65,7 +65,8 @@ Open the app at the local URL printed by Next.js, usually [http://localhost:3000
 3. Create the tables from the schema in [docs/implementation-plan.md](docs/implementation-plan.md).
 4. Run [docs/seed-players.sql](docs/seed-players.sql) to create the playgroup player accounts.
 5. Run [docs/deck-images.sql](docs/deck-images.sql) to create the deck photo metadata table and private `deck-images` Storage bucket.
-6. Confirm the `users.email` values match the Google accounts players will use to log in.
+6. Run [docs/data-safety-upgrades.sql](docs/data-safety-upgrades.sql) to add soft-delete and edit metadata columns.
+7. Confirm the `users.email` values match the Google accounts players will use to log in.
 
 The `deck-images` bucket is private. The app creates short-lived signed URLs when draft detail pages are loaded, so deck photos are not public files.
 
@@ -79,7 +80,6 @@ The main tables are:
 - `money_results`: manually entered net money result per draft participant
 - `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
 - `deck_images`: metadata for uploaded deck photos stored in the private Supabase Storage bucket
-- `offline_mutations`: planned storage for future offline sync/conflict handling
 
 ## Deck Photos
 
@@ -92,6 +92,7 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 - Photo metadata is stored in `deck_images`
 - Photo files are stored in the private `deck-images` bucket
 - Draft detail pages show `Deck photo 1` and `Deck photo 2` links beside each player's decklist
+- Deck photo links use `/deck-images/:id`, which checks the app session and redirects to a fresh signed Storage URL
 - Uploading or deleting a deck photo creates an audit log entry for the draft
 
 ## Google Auth Setup
@@ -148,6 +149,7 @@ https://cube-ledger.vercel.app
 ```bash
 npm run dev
 npm run build
+npm test
 npm run start
 ```
 
@@ -166,5 +168,6 @@ The current seed makes Lucas Siow an admin and everyone else an organizer.
 - Keep `SUPABASE_SERVICE_ROLE_KEY` private. Only store it in `.env.local` and Vercel environment variables.
 - Do not expose the service role key in browser code.
 - Deck photo uploads require `SUPABASE_SERVICE_ROLE_KEY` to be set in Vercel.
+- Draft deletion is soft-delete: deleted drafts are hidden from the app, but audit history is retained.
 - If Row Level Security is enabled later, add policies that allow authenticated playgroup members to read data and organizers/admins to write draft data.
 - Stats are derived from saved draft, participant, match, and money rows rather than stored as manual totals.
