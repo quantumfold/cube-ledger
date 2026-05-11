@@ -128,7 +128,7 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       row.gamesLost += standing.gamesLost;
       row.gamesDrawn += standing.gamesDrawn;
       row.totalMoneyCents += standing.moneyCents;
-      if (isTeamDraft(draft)) {
+      if (isTeamDraft(draft) && draft.winningTeam) {
         const participant = draft.participants.find((item) => item.id === standing.participantId);
         row.teamDraftsPlayed += 1;
         if (participant?.team && participant.team === draft.winningTeam) {

@@ -126,6 +126,31 @@ test("team stats infer team drafts from winning team assignments", () => {
   assert.equal(david?.totalMoneyCents, -5000);
 });
 
+test("team draft win rate ignores drafts with no winner", () => {
+  const tiedTeamDraft: DraftEvent = {
+    ...draft,
+    id: "team-draft-no-winner",
+    format: "Teams After Draft",
+    winningTeam: undefined,
+    participants: [
+      { ...draft.participants[0], id: "tdnw1", draftEventId: "team-draft-no-winner", team: "A" },
+      { ...draft.participants[1], id: "tdnw2", draftEventId: "team-draft-no-winner", team: "B" }
+    ],
+    matches: [],
+    moneyResults: []
+  };
+
+  const stats = playerStats(players, [tiedTeamDraft]);
+  const lucas = stats.find((row) => row.playerId === "p1");
+  const david = stats.find((row) => row.playerId === "p2");
+  assert.equal(lucas?.draftsPlayed, 1);
+  assert.equal(lucas?.teamDraftsPlayed, 0);
+  assert.equal(lucas?.teamDraftWinRate, 0);
+  assert.equal(david?.draftsPlayed, 1);
+  assert.equal(david?.teamDraftsPlayed, 0);
+  assert.equal(david?.teamDraftWinRate, 0);
+});
+
 test("head-to-head records derive match outcomes", () => {
   const rows = headToHeadForPlayer("p1", players, [draft]);
   assert.equal(rows[0].opponentId, "p2");
