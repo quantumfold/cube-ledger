@@ -20,6 +20,7 @@ type DashboardSearchParams = {
   minMatches?: string;
   money?: string;
   winRate?: string;
+  includeLegacy?: string;
 };
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -59,6 +60,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <input name="minMatches" aria-label="Minimum matches" placeholder="Min matches" defaultValue={filters.minMatches ?? ""} />
           <select name="money" aria-label="Money results" defaultValue={filters.money ?? ""}><option value="">Any money result</option><option value="positive">Positive only</option><option value="negative">Negative only</option></select>
           <select name="winRate" aria-label="Win rate" defaultValue={filters.winRate ?? ""}><option value="">Any win rate</option><option value="0.5">50%+</option><option value="0.6">60%+</option></select>
+          <label className="button" style={{ justifyContent: "flex-start" }}>
+            <input type="checkbox" name="includeLegacy" value="1" defaultChecked={filters.includeLegacy === "1"} />
+            Include legacy drafts
+          </label>
           <button type="submit" className="primary">Apply</button>
           <Link className="button" href="/">Reset</Link>
         </form>

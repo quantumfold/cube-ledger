@@ -48,6 +48,9 @@ export function LineChart({ series, formatValue, emptyLabel }: LineChartProps) {
           const path = item.points.map((point, index) => `${index === 0 ? "M" : "L"} ${xFor(index)} ${yFor(point.value)}`).join(" ");
           return (
             <g key={item.name}>
+              <path d={path} fill="none" stroke="transparent" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round">
+                <title>{item.name}</title>
+              </path>
               <path d={path} fill="none" stroke={item.color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
               {item.points.map((point, index) => (
                 <circle key={`${item.name}-${point.label}-${index}`} cx={xFor(index)} cy={yFor(point.value)} r="3.5" fill={item.color}>

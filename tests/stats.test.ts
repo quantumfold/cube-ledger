@@ -208,3 +208,17 @@ test("dashboard team format filters include both team draft types", () => {
     ["before", "after"]
   );
 });
+
+test("dashboard excludes legacy drafts unless requested", () => {
+  const legacyDraft: DraftEvent = { ...draft, id: "legacy", eventDate: "2024-01-01" };
+  const modernDraft: DraftEvent = { ...draft, id: "modern", eventDate: "2026-01-01" };
+
+  assert.deepEqual(
+    filterDashboardDrafts([legacyDraft, modernDraft], {}).map((item) => item.id),
+    ["modern"]
+  );
+  assert.deepEqual(
+    filterDashboardDrafts([legacyDraft, modernDraft], { includeLegacy: "1" }).map((item) => item.id),
+    ["legacy", "modern"]
+  );
+});
