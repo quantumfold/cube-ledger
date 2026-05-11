@@ -105,6 +105,33 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
         </div>
       </section>
 
+      {draft.sidebets.length ? (
+        <section className="panel panel-pad">
+          <div className="section-title"><h2>Sidebets</h2></div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Winner</th><th>Loser</th><th>Amount</th><th>Match</th><th>Notes</th></tr></thead>
+              <tbody>
+                {draft.sidebets.map((sidebet) => {
+                  const winner = draft.participants.find((participant) => participant.id === sidebet.winnerParticipantId);
+                  const loser = draft.participants.find((participant) => participant.id === sidebet.loserParticipantId);
+                  const match = sidebet.matchId ? draft.matches.find((item) => item.id === sidebet.matchId) : null;
+                  return (
+                    <tr key={sidebet.id}>
+                      <td>{winner?.displayNameSnapshot}</td>
+                      <td>{loser?.displayNameSnapshot}</td>
+                      <td>{money(sidebet.amountCents)}</td>
+                      <td>{match?.roundLabel ?? "Standalone"}</td>
+                      <td className="muted">{sidebet.notes ?? ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      ) : null}
+
       <section className="panel panel-pad">
         <div className="section-title"><h2>Decklists</h2><span className="pill">Optional</span></div>
         <div className="grid">

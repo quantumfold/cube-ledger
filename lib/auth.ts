@@ -29,11 +29,11 @@ export async function getCurrentAppUser(): Promise<Player | null> {
 
   const { data: userRow } = await supabase
     .from("users")
-    .select("id, google_id, display_name, email, profile_image_url, role")
+    .select("id, google_id, display_name, email, profile_image_url, role, login_enabled, show_on_leaderboard")
     .ilike("email", email)
     .single();
 
-  if (!userRow) return null;
+  if (!userRow || userRow.login_enabled === false) return null;
 
   return {
     id: userRow.id,
@@ -41,6 +41,8 @@ export async function getCurrentAppUser(): Promise<Player | null> {
     displayName: userRow.display_name,
     email: userRow.email,
     profileImageUrl: userRow.profile_image_url ?? undefined,
-    role: userRow.role as Role
+    role: userRow.role as Role,
+    loginEnabled: userRow.login_enabled ?? true,
+    showOnLeaderboard: userRow.show_on_leaderboard ?? true
   };
 }

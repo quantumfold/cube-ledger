@@ -77,6 +77,14 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
     }
   }
 
+  for (const sidebet of draft.sidebets ?? []) {
+    const winner = rows.get(sidebet.winnerParticipantId);
+    const loser = rows.get(sidebet.loserParticipantId);
+    if (!winner || !loser) continue;
+    winner.moneyCents += sidebet.amountCents;
+    loser.moneyCents -= sidebet.amountCents;
+  }
+
   return [...rows.values()].sort((a, b) => b.points - a.points || b.gamesWon - a.gamesWon || b.moneyCents - a.moneyCents);
 }
 

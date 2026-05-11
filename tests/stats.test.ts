@@ -5,8 +5,8 @@ import { headToHeadForPlayer, playerStats, standingsForDraft } from "../lib/stat
 import type { DraftEvent, Player } from "../lib/types.ts";
 
 const players: Player[] = [
-  { id: "p1", displayName: "Lucas", email: "lucas@example.com", role: "admin" },
-  { id: "p2", displayName: "David", email: "david@example.com", role: "organizer" }
+  { id: "p1", displayName: "Lucas", email: "lucas@example.com", role: "admin", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p2", displayName: "David", email: "david@example.com", role: "organizer", loginEnabled: true, showOnLeaderboard: true }
 ];
 
 const draft: DraftEvent = {
@@ -41,6 +41,7 @@ const draft: DraftEvent = {
     { id: "mr1", draftEventId: "d1", participantId: "dp1", netCents: 0 },
     { id: "mr2", draftEventId: "d1", participantId: "dp2", netCents: 0 }
   ],
+  sidebets: [],
   auditLog: []
 };
 
@@ -166,6 +167,28 @@ for (const format of ["Teams Before Draft", "Teams After Draft"] as const) {
     assert.equal(teamB?.moneyCents, 5000);
   });
 }
+
+test("draft-level sidebets can include multiple bets for one player", () => {
+  const sidebetDraft: DraftEvent = {
+    ...draft,
+    participants: [
+      ...draft.participants,
+      { id: "dp3", draftEventId: "d1", playerId: "p3", displayNameSnapshot: "Maksym", seatOrder: 3, deckArchetype: "", colors: [], strategy: "", deckNotes: "" }
+    ],
+    sidebets: [
+      { id: "sb1", draftEventId: "d1", winnerParticipantId: "dp1", loserParticipantId: "dp2", amountCents: 6000 },
+      { id: "sb2", draftEventId: "d1", winnerParticipantId: "dp1", loserParticipantId: "dp3", amountCents: 10000 }
+    ]
+  };
+
+  const standings = standingsForDraft(sidebetDraft);
+  const lucas = standings.find((row) => row.participantId === "dp1");
+  const david = standings.find((row) => row.participantId === "dp2");
+  const maksym = standings.find((row) => row.participantId === "dp3");
+  assert.equal(lucas?.moneyCents, 22000);
+  assert.equal(david?.moneyCents, -12000);
+  assert.equal(maksym?.moneyCents, -10000);
+});
 
 test("dashboard team format filters include both team draft types", () => {
   const beforeDraft: DraftEvent = { ...draft, id: "before", format: "Teams Before Draft" };

@@ -1,0 +1,31 @@
+draft_key,sidebet_key,winner_key,loser_key,amount_cents,source_match_key,status
+legacy-16,legacy-16-sidebet-1,legacy-16-maksym-gryn,legacy-16-lucas-siow,10000,legacy-16-match-6,matched to source match
+legacy-17,legacy-17-sidebet-1,legacy-17-lucas-siow,legacy-17-brian-liu,6000,legacy-17-match-6,matched to source match
+legacy-17,legacy-17-sidebet-2,legacy-17-lucas-siow,legacy-17-tyler-longo,6000,legacy-17-match-4,matched to source match
+legacy-17,legacy-17-sidebet-3,legacy-17-lucas-siow,legacy-17-maksym-gryn,10000,legacy-17-match-5,matched to source match
+legacy-18,legacy-18-sidebet-1,legacy-18-lucas-siow,legacy-18-maksym-gryn,10000,,paired by amount
+legacy-18,legacy-18-sidebet-2,legacy-18-lucas-siow,legacy-18-brian-liu,6000,,paired by amount
+legacy-19,legacy-19-sidebet-1,legacy-19-lucas-siow,legacy-19-brian-liu,6000,legacy-19-match-6,matched to source match
+legacy-20,legacy-20-sidebet-1,legacy-20-brian-liu,legacy-20-lucas-siow,6000,,paired by amount
+legacy-24,legacy-24-sidebet-1,legacy-24-maksym-gryn,legacy-24-brian-liu,4000,legacy-24-match-6,matched to source match
+legacy-25,legacy-25-sidebet-1,legacy-25-maksym-gryn,legacy-25-tyler-longo,14000,,paired by amount
+legacy-28,legacy-28-sidebet-1,legacy-28-chris-harabas,legacy-28-maksym-gryn,10000,,paired by amount
+legacy-28,legacy-28-sidebet-2,legacy-28-chris-harabas,legacy-28-lucas-siow,5000,legacy-28-match-4,matched to source match
+legacy-29,legacy-29-sidebet-1,legacy-29-chris-harabas,legacy-29-maksym-gryn,5000,legacy-29-match-8,matched to source match
+legacy-29,legacy-29-sidebet-2,legacy-29-chris-harabas,legacy-29-lucas-siow,5000,legacy-29-match-9,matched to source match
+legacy-30,legacy-30-sidebet-1,legacy-30-lucas-siow,legacy-30-maksym-gryn,10000,legacy-30-match-9,matched to source match
+legacy-31,legacy-31-sidebet-1,legacy-31-lucas-siow,legacy-31-maksym-gryn,10000,,paired by amount
+legacy-31,legacy-31-sidebet-2,legacy-31-lucas-siow,legacy-31-brian-liu,4000,legacy-31-match-4,matched to source match
+legacy-32,legacy-32-sidebet-1,legacy-32-brian-liu,legacy-32-maksym-gryn,4000,legacy-32-match-10,matched to source match
+legacy-32,legacy-32-sidebet-2,legacy-32-lucas-siow,legacy-32-maksym-gryn,10000,legacy-32-match-1,matched to source match
+legacy-32,legacy-32-sidebet-3,legacy-32-lucas-siow,legacy-32-daniel-founier,4000,legacy-32-match-3,matched to source match
+legacy-34,legacy-34-sidebet-1,legacy-34-lucas-siow,legacy-34-maksym-gryn,10000,legacy-34-match-7,matched to source match
+legacy-35,legacy-35-sidebet-1,legacy-35-brian-liu,legacy-35-lucas-siow,4000,,paired by amount
+legacy-45,legacy-45-sidebet-1,legacy-45-lucas-siow,legacy-45-brian-liu,4000,,paired by amount
+legacy-46,legacy-46-sidebet-1,legacy-46-lucas-siow,legacy-46-maksym-gryn,10000,,paired by amount
+legacy-46,legacy-46-sidebet-2,legacy-46-lucas-siow,legacy-46-brian-liu,4000,legacy-46-match-7,matched to source match
+legacy-50,legacy-50-sidebet-1,legacy-50-maksym-gryn,legacy-50-brian-liu,6000,legacy-50-match-4,matched to source match
+legacy-51,legacy-51-sidebet-1,legacy-51-tyler-longo,legacy-51-maksym-gryn,6000,,paired by amount
+legacy-52,legacy-52-sidebet-1,legacy-52-tyler-longo,legacy-52-brian-liu,4000,,paired by amount
+legacy-69,legacy-69-sidebet-1,legacy-69-lucas-siow,legacy-69-brian-liu,10000,legacy-69-match-10,matched to source match
+legacy-69,legacy-69-sidebet-2,legacy-69-maksym-gryn,legacy-69-brian-liu,10000,,paired by amount

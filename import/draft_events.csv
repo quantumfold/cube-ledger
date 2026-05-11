@@ -1,0 +1,77 @@
+legacy_draft_id,draft_key,title,event_date,format,draft_type,winning_team,default_stake_cents,notes
+1,legacy-1,Legacy Draft 1,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+2,legacy-2,Legacy Draft 2,2024-01-01,Teams After Draft,Vintage,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+3,legacy-3,Legacy Draft 3,2024-01-01,Teams After Draft,Vintage,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+4,legacy-4,Legacy Draft 4,2024-01-01,Teams After Draft,Vintage,A,3300,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+5,legacy-5,Legacy Draft 5,2024-01-01,Teams After Draft,Andrew Cube,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+6,legacy-6,Legacy Draft 6,2024-01-01,Teams After Draft,Vintage,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+7,legacy-7,Legacy Draft 7,2024-01-01,Teams After Draft,Vintage,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+8,legacy-8,Legacy Draft 8,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+9,legacy-9,Legacy Draft 9,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+10,legacy-10,Legacy Draft 10,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+11,legacy-11,Legacy Draft 11,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+12,legacy-12,Legacy Draft 12,2024-01-01,Teams After Draft,Vintage,A,10000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+13,legacy-13,Legacy Draft 13,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+14,legacy-14,Legacy Draft 14,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+15,legacy-15,Legacy Draft 15,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+16,legacy-16,Legacy Draft 16,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+17,legacy-17,Legacy Draft 17,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+18,legacy-18,Legacy Draft 18,2024-01-01,Teams After Draft,Andrew Cube,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+19,legacy-19,Legacy Draft 19,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+20,legacy-20,Legacy Draft 20,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+21,legacy-21,Legacy Draft 21,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+22,legacy-22,Legacy Draft 22,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+23,legacy-23,Legacy Draft 23,2024-01-01,Teams After Draft,Vintage,A,8000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+24,legacy-24,Legacy Draft 24,2024-01-01,Teams After Draft,Vintage,A,6000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+25,legacy-25,Legacy Draft 25,2024-01-01,Teams After Draft,Vintage,A,6000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+26,legacy-26,Legacy Draft 26,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+27,legacy-27,Legacy Draft 27,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+28,legacy-28,Legacy Draft 28,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+29,legacy-29,Legacy Draft 29,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+30,legacy-30,Legacy Draft 30,2024-01-01,Teams After Draft,Vintage,A,5000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+31,legacy-31,Legacy Draft 31,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+32,legacy-32,Legacy Draft 32,2024-01-01,Teams After Draft,Andrew Cube,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+33,legacy-33,Legacy Draft 33,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+34,legacy-34,Legacy Draft 34,2024-01-01,Teams After Draft,Vintage,A,14100,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+35,legacy-35,Legacy Draft 35,2024-01-01,Teams After Draft,Andrew Cube,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+36,legacy-36,Legacy Draft 36,2024-01-01,Teams After Draft,Vintage,A,2000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+37,legacy-37,Legacy Draft 37,2024-01-01,Teams After Draft,Andrew Cube,A,10000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+38,legacy-38,Legacy Draft 38,2024-01-01,Teams After Draft,Andrew Cube,A,6000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+39,legacy-39,Legacy Draft 39,2024-01-01,Teams After Draft,Andrew Cube,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+40,legacy-40,Legacy Draft 40,2024-01-01,Teams After Draft,Vintage,A,6000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+41,legacy-41,Legacy Draft 41,2024-01-01,Teams After Draft,Vintage,A,3500,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+42,legacy-42,Legacy Draft 42,2024-01-01,Teams After Draft,Vintage,A,6000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+43,legacy-43,Legacy Draft 43,2024-01-01,Teams After Draft,Vintage,A,3500,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+44,legacy-44,Legacy Draft 44,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+45,legacy-45,Legacy Draft 45,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+46,legacy-46,Legacy Draft 46,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+47,legacy-47,Legacy Draft 47,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+48,legacy-48,Legacy Draft 48,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+49,legacy-49,Legacy Draft 49,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+50,legacy-50,Legacy Draft 50,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+51,legacy-51,Legacy Draft 51,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+52,legacy-52,Legacy Draft 52,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+53,legacy-53,Legacy Draft 53,2024-01-01,Teams After Draft,Vintage,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+54,legacy-54,Legacy Draft 54,2024-01-01,Teams After Draft,Andrew Cube,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+55,legacy-55,Legacy Draft 55,2024-01-01,Teams After Draft,Vintage,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+56,legacy-56,Legacy Draft 56,2024-01-01,Teams After Draft,Vintage,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+57,legacy-57,Legacy Draft 57,2024-01-01,Teams After Draft,Vintage,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+58,legacy-58,Legacy Draft 58,2024-01-01,Teams After Draft,Vintage,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+60,legacy-60,Legacy Draft 60,2024-01-01,Teams After Draft,Morgan Cube,A,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+61,legacy-61,Legacy Draft 61,2024-01-01,Teams After Draft,Morgan Cube,A,8000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+62,legacy-62,Legacy Draft 62,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+63,legacy-63,Legacy Draft 63,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+64,legacy-64,Legacy Draft 64,2024-01-01,Teams After Draft,Morgan Cube,A,8000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+65,legacy-65,Legacy Draft 65,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+66,legacy-66,Legacy Draft 66,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+67,legacy-67,Legacy Draft 67,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+68,legacy-68,Legacy Draft 68,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+69,legacy-69,Legacy Draft 69,2024-01-01,Teams After Draft,Morgan Cube,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+70,legacy-70,Legacy Draft 70,2024-01-01,Teams After Draft,Morgan Cube,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+71,legacy-71,Legacy Draft 71,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+72,legacy-72,Legacy Draft 72,2024-01-01,Teams After Draft,Morgan Cube,A,5000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+73,legacy-73,Legacy Draft 73,2024-01-01,Teams After Draft,Vintage,A,5000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+74,legacy-74,Legacy Draft 74,2024-01-01,Teams After Draft,Vintage,A,4000,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv.
+75,legacy-75,Legacy Draft 75,2024-01-01,Teams After Draft,Vintage,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Money record was $0 for all players; treated as tied draft with no winning team.
+77,legacy-77,Legacy Draft 77,2024-01-01,Individual,Andrew Cube,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Source label: Cubeathon 2026
+78,legacy-78,Legacy Draft 78,2024-01-01,Individual,Morgan Cube,,0,Imported from Draft-Records-Matches.csv and Draft-Records-R.csv. Source label: Cubeathon 2026

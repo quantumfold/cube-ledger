@@ -1,4 +1,4 @@
-import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, normalizeDraftFormat, Player } from "@/lib/types";
+import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, Sidebet, normalizeDraftFormat, Player } from "@/lib/types";
 
 type DbUser = {
   id: string;
@@ -7,6 +7,8 @@ type DbUser = {
   email: string;
   profile_image_url: string | null;
   role: Player["role"];
+  login_enabled: boolean | null;
+  show_on_leaderboard: boolean | null;
 };
 
 type DbDraft = {
@@ -23,6 +25,7 @@ type DbDraft = {
   draft_participants?: DbParticipant[];
   matches?: DbMatch[];
   money_results?: DbMoneyResult[];
+  sidebets?: DbSidebet[];
   audit_log?: DbAuditLog[];
 };
 
@@ -81,6 +84,16 @@ type DbMoneyResult = {
   notes: string | null;
 };
 
+type DbSidebet = {
+  id: string;
+  draft_event_id: string;
+  winner_participant_id: string;
+  loser_participant_id: string;
+  amount_cents: number;
+  match_id: string | null;
+  notes: string | null;
+};
+
 type DbAuditLog = {
   id: string;
   entity_type: string;
@@ -98,7 +111,9 @@ export function mapPlayer(row: DbUser): Player {
     displayName: row.display_name,
     email: row.email,
     profileImageUrl: row.profile_image_url ?? undefined,
-    role: row.role
+    role: row.role,
+    loginEnabled: row.login_enabled ?? true,
+    showOnLeaderboard: row.show_on_leaderboard ?? true
   };
 }
 
@@ -117,6 +132,7 @@ export function mapDraft(row: DbDraft): DraftEvent {
     participants: (row.draft_participants ?? []).map(mapParticipant),
     matches: (row.matches ?? []).map(mapMatch),
     moneyResults: (row.money_results ?? []).map(mapMoneyResult),
+    sidebets: (row.sidebets ?? []).map(mapSidebet),
     auditLog: (row.audit_log ?? []).map((entry) => ({
       id: entry.id,
       entityType: entry.entity_type,
@@ -186,6 +202,18 @@ function mapMoneyResult(row: DbMoneyResult): MoneyResult {
     draftEventId: row.draft_event_id,
     participantId: row.draft_participant_id,
     netCents: row.net_cents,
+    notes: row.notes ?? undefined
+  };
+}
+
+function mapSidebet(row: DbSidebet): Sidebet {
+  return {
+    id: row.id,
+    draftEventId: row.draft_event_id,
+    winnerParticipantId: row.winner_participant_id,
+    loserParticipantId: row.loser_participant_id,
+    amountCents: row.amount_cents,
+    matchId: row.match_id ?? undefined,
     notes: row.notes ?? undefined
   };
 }

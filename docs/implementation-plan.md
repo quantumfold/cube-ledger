@@ -14,6 +14,8 @@ create table users (
   email text unique not null,
   profile_image_url text,
   role text not null default 'player' check (role in ('player', 'organizer', 'admin')),
+  login_enabled boolean not null default true,
+  show_on_leaderboard boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -95,6 +97,21 @@ create table money_results (
   updated_by uuid references users(id),
   updated_at timestamptz not null default now(),
   unique (draft_event_id, draft_participant_id)
+);
+
+create table sidebets (
+  id uuid primary key default gen_random_uuid(),
+  draft_event_id uuid not null references draft_events(id) on delete cascade,
+  winner_participant_id uuid not null references draft_participants(id) on delete cascade,
+  loser_participant_id uuid not null references draft_participants(id) on delete cascade,
+  amount_cents integer not null check (amount_cents > 0),
+  match_id uuid references matches(id) on delete set null,
+  notes text,
+  created_by uuid references users(id),
+  updated_by uuid references users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (winner_participant_id <> loser_participant_id)
 );
 
 create table audit_log (

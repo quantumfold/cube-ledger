@@ -63,6 +63,7 @@ export type Database = {
       matches: Table<AnyRow>;
       match_results: Table<AnyRow>;
       money_results: Table<AnyRow>;
+      sidebets: Table<AnyRow>;
       users: Table<AnyRow>;
     };
     Views: Record<string, never>;

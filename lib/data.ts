@@ -7,7 +7,8 @@ const draftSelect = `
   *,
   draft_participants (*),
   matches (*, match_results (*)),
-  money_results (*)
+  money_results (*),
+  sidebets (*)
 `;
 
 export async function getPlayers(): Promise<Player[]> {
