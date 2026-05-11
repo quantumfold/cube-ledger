@@ -30,6 +30,12 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="grid split">
+        {draft.format === "Team" ? (
+          <div className="panel panel-pad">
+            <div className="section-title"><h2>Draft Winner</h2></div>
+            <strong>{draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set"}</strong>
+          </div>
+        ) : null}
         <div className="panel panel-pad">
           <div className="section-title"><h2>Final Standings</h2></div>
           <div className="table-wrap">

@@ -129,7 +129,12 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       row.gamesLost += standing.gamesLost;
       row.gamesDrawn += standing.gamesDrawn;
       row.totalMoneyCents += standing.moneyCents;
-      if (index === 0) row.firstPlaces += 1;
+      if (draft.format === "Team") {
+        const participant = draft.participants.find((item) => item.id === standing.participantId);
+        if (participant?.team && participant.team === draft.winningTeam) row.firstPlaces += 1;
+      } else if (index === 0) {
+        row.firstPlaces += 1;
+      }
     });
   }
 

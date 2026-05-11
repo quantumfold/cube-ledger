@@ -30,7 +30,7 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
                 <td>{draft.format}{draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam}` : ""}</td>
                 <td>{draft.draftType}</td>
                 <td>{draft.participants.length}</td>
-                <td>{standings[0]?.displayName ?? "N/A"}</td>
+                <td>{draft.format === "Team" ? draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set" : standings[0]?.displayName ?? "N/A"}</td>
                 <td>{money(draft.defaultStakeCents)}</td>
                 <td className={netLeader?.moneyCents >= 0 ? "money-pos" : "money-neg"}>{netLeader ? `${netLeader.displayName} ${money(netLeader.moneyCents)}` : "N/A"}</td>
                 <td>

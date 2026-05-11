@@ -61,6 +61,36 @@ test("player stats derive totals from draft data", () => {
   assert.equal(lucas?.totalMoneyCents, 6000);
 });
 
+test("team draft wins credit players on the winning team", () => {
+  const teamDraft: DraftEvent = {
+    ...draft,
+    id: "team-draft-win",
+    format: "Team",
+    winningTeam: "B",
+    participants: [
+      { ...draft.participants[0], id: "tdwp1", draftEventId: "team-draft-win", team: "A" },
+      { ...draft.participants[1], id: "tdwp2", draftEventId: "team-draft-win", team: "B" }
+    ],
+    matches: [
+      {
+        id: "tmw1",
+        draftEventId: "team-draft-win",
+        roundLabel: "Round 1",
+        playerAId: "tdwp1",
+        playerBId: "tdwp2",
+        playerAWins: 2,
+        playerBWins: 0,
+        draws: 0,
+        sidebetCents: 0
+      }
+    ],
+    moneyResults: []
+  };
+  const stats = playerStats(players, [teamDraft]);
+  assert.equal(stats.find((row) => row.playerId === "p1")?.firstPlaces, 0);
+  assert.equal(stats.find((row) => row.playerId === "p2")?.firstPlaces, 1);
+});
+
 test("head-to-head records derive match outcomes", () => {
   const rows = headToHeadForPlayer("p1", players, [draft]);
   assert.equal(rows[0].opponentId, "p2");
