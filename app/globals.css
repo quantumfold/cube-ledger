@@ -432,6 +432,22 @@ th {
   border-bottom: 0;
 }
 
+.audit-log-item {
+  align-items: flex-start;
+}
+
+.audit-log-toggle {
+  min-height: auto;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.audit-log-details {
+  margin: 6px 0 0 24px;
+}
+
 .decklist-block {
   padding: 14px 0;
   border-bottom: 1px solid var(--line);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Edit3 } from "lucide-react";
+import { AuditLog } from "@/components/AuditLog";
 import { getDraft, getPlayers } from "@/lib/data";
 import { money, standingsForDraft } from "@/lib/stats";
 import { isTeamDraftFormat } from "@/lib/types";
@@ -12,7 +13,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
   const [draft, players] = await Promise.all([getDraft(id), getPlayers()]);
   if (!draft) notFound();
   const standings = standingsForDraft(draft);
-  const playerById = new Map(players.map((player) => [player.id, player]));
+  const submitterNames = Object.fromEntries(players.map((player) => [player.id, player.displayName]));
 
   return (
     <div className="grid" style={{ gap: 18 }}>
@@ -132,21 +133,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
         </div>
       </section>
 
-      <section className="panel panel-pad">
-        <div className="section-title"><h2>Audit Log</h2><span className="pill">Version {draft.version}</span></div>
-        <div className="list">
-          {draft.auditLog.map((entry) => (
-            <div className="list-item" key={entry.id}>
-              <div>
-                <strong>{entry.action}</strong>
-                <div className="muted">{entry.summary}</div>
-                <div className="muted">Submitted by {playerById.get(entry.changedBy)?.displayName ?? "Unknown user"}</div>
-              </div>
-              <span className="muted">{new Date(entry.changedAt).toLocaleString()}</span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <AuditLog entries={draft.auditLog} version={draft.version} submitterNames={submitterNames} />
     </div>
   );
 }
