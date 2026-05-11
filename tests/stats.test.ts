@@ -248,6 +248,20 @@ test("dashboard excludes legacy drafts unless requested", () => {
   );
 });
 
+test("dashboard can limit to the most recent drafts", () => {
+  const drafts = Array.from({ length: 12 }, (_, index) => ({
+    ...draft,
+    id: `draft-${index + 1}`,
+    title: `Draft ${index + 1}`,
+    eventDate: `2026-01-${String(index + 1).padStart(2, "0")}`
+  }));
+
+  assert.deepEqual(
+    filterDashboardDrafts(drafts, { lastDrafts: "10" }).map((item) => item.id),
+    ["draft-12", "draft-11", "draft-10", "draft-9", "draft-8", "draft-7", "draft-6", "draft-5", "draft-4", "draft-3"]
+  );
+});
+
 test("trend series includes every active player", () => {
   const manyPlayers: Player[] = Array.from({ length: 12 }, (_, index) => ({
     id: `p${index + 1}`,

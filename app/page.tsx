@@ -21,6 +21,7 @@ type DashboardSearchParams = {
   money?: string;
   winRate?: string;
   includeLegacy?: string;
+  lastDrafts?: string;
 };
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
@@ -64,6 +65,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
             <input type="checkbox" name="includeLegacy" value="1" defaultChecked={filters.includeLegacy === "1"} />
             Include legacy drafts
           </label>
+          <button type="submit" name="lastDrafts" value="10" className={filters.lastDrafts === "10" ? "primary" : undefined}>Last 10</button>
+          <button type="submit" name="lastDrafts" value="25" className={filters.lastDrafts === "25" ? "primary" : undefined}>Last 25</button>
+          <button type="submit" name="lastDrafts" value="50" className={filters.lastDrafts === "50" ? "primary" : undefined}>Last 50</button>
           <button type="submit" className="primary">Apply</button>
           <Link className="button" href="/">Reset</Link>
         </form>
