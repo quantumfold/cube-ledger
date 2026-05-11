@@ -3,6 +3,7 @@ import { getCurrentAppUser } from "@/lib/auth";
 import { getDraft } from "@/lib/data";
 import { standingsForDraft } from "@/lib/stats";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
+import { DraftFormat, isTeamDraftFormat, normalizeDraftFormat } from "@/lib/types";
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -38,7 +39,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       event_date: payload.eventDate,
       format: payload.format,
       draft_type: payload.draftType,
-      winning_team: payload.format === "Team" ? payload.winningTeam : null,
+      winning_team: isTeamDraftFormat(payload.format) ? payload.winningTeam : null,
       default_stake_cents: payload.defaultStakeCents,
       notes: payload.notes,
       updated_by: changedBy,
@@ -53,7 +54,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { error } = await supabase
       .from("draft_participants")
       .update({
-        team: payload.format === "Team" ? participant.team : null,
+        team: isTeamDraftFormat(payload.format) ? participant.team : null,
         deck_archetype: participant.deckArchetype,
         colors: participant.colors,
         strategy: participant.strategy,
@@ -69,7 +70,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { error: moneyError } = await supabase
       .from("money_results")
       .update({
-        net_cents: participant.moneyCents,
+        net_cents: moneyForParticipant(payload.format, payload.defaultStakeCents, payload.winningTeam, participant.team, participant.moneyCents),
         notes: participant.moneyNotes,
         updated_by: changedBy,
         updated_at: new Date().toISOString()
@@ -209,7 +210,7 @@ type EditPayload = {
   baseVersion: number;
   title: string;
   eventDate: string;
-  format: "Individual" | "Team";
+  format: DraftFormat;
   draftType: string;
   winningTeam: "A" | "B" | null;
   defaultStakeCents: number;
@@ -255,7 +256,7 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   const baseVersion = Number(data.baseVersion);
   const title = typeof data.title === "string" ? data.title.trim() : "";
   const eventDate = typeof data.eventDate === "string" ? data.eventDate : "";
-  const format = data.format === "Team" ? "Team" : data.format === "Individual" ? "Individual" : null;
+  const format = normalizeDraftFormat(data.format);
   const draftType = typeof data.draftType === "string" ? data.draftType : "";
   const defaultStakeCents = parseCents(data.defaultStake);
   const notes = typeof data.notes === "string" ? data.notes.trim() : "";
@@ -264,7 +265,7 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   if (!Number.isInteger(baseVersion)) return { error: "Missing draft version" };
   if (!title) return { error: "Draft title is required" };
   if (!eventDate) return { error: "Draft date is required" };
-  if (!format) return { error: "Format must be Individual or Team" };
+  if (!format) return { error: "Format must be Individual, Teams Before Draft, or Teams After Draft" };
   if (!["Vintage", "Andrew Cube", "Morgan Cube"].includes(draftType)) return { error: "Draft type is required" };
   if (defaultStakeCents < 0) return { error: "Stake cannot be negative" };
 
@@ -273,7 +274,7 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
   const participants = rawParticipants.map((raw) => {
     if (!isRecord(raw) || typeof raw.id !== "string" || !participantIdSet.has(raw.id)) return null;
     const team = raw.team === "A" || raw.team === "B" ? raw.team : null;
-    if (format === "Team" && !team) return null;
+    if (isTeamDraftFormat(format) && !team) return null;
     return {
       id: raw.id,
       team,
@@ -406,6 +407,11 @@ function parseColors(value: unknown) {
   if (!trimmed) return [];
   if (/[\s,/]/.test(trimmed)) return trimmed.split(/[\s,/]+/).filter(Boolean).map((color) => color.toUpperCase());
   return trimmed.split("").map((color) => color.toUpperCase());
+}
+
+function moneyForParticipant(format: DraftFormat, defaultStakeCents: number, winningTeam: "A" | "B" | null, team: "A" | "B" | null, fallbackCents: number) {
+  if (!isTeamDraftFormat(format) || !winningTeam || !team) return fallbackCents;
+  return team === winningTeam ? defaultStakeCents : -defaultStakeCents;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

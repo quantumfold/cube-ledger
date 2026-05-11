@@ -1,4 +1,5 @@
 import type { Achievement, DraftEvent, HeadToHead, Player, PlayerStats, Standing } from "./types.ts";
+import { hasTeamDraftData, isTeamDraftFormat } from "./types.ts";
 
 export function money(cents: number) {
   const sign = cents > 0 ? "+" : cents < 0 ? "-" : "";
@@ -12,7 +13,6 @@ export function percent(value: number) {
 
 export function standingsForDraft(draft: DraftEvent): Standing[] {
   const rows = new Map<string, Standing>();
-  const participantsById = new Map(draft.participants.map((participant) => [participant.id, participant]));
   for (const participant of draft.participants) {
     rows.set(participant.id, {
       participantId: participant.id,
@@ -69,23 +69,11 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
     }
   }
 
-  if (draft.format === "Team" && draft.winningTeam) {
+  if (isTeamDraft(draft)) {
     for (const participant of draft.participants) {
       const row = rows.get(participant.id);
       if (!row) continue;
       row.moneyCents += participant.team === draft.winningTeam ? draft.defaultStakeCents : -draft.defaultStakeCents;
-    }
-
-    for (const match of draft.matches) {
-      if (match.sidebetCents <= 0) continue;
-      const participantA = participantsById.get(match.playerAId);
-      const participantB = participantsById.get(match.playerBId);
-      if (!participantA || !participantB || participantA.team === participantB.team) continue;
-      const winner = participantA.team === draft.winningTeam ? rows.get(participantA.id) : rows.get(participantB.id);
-      const loser = participantA.team === draft.winningTeam ? rows.get(participantB.id) : rows.get(participantA.id);
-      if (!winner || !loser) continue;
-      winner.moneyCents += match.sidebetCents;
-      loser.moneyCents -= match.sidebetCents;
     }
   }
 
@@ -132,7 +120,7 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       row.gamesLost += standing.gamesLost;
       row.gamesDrawn += standing.gamesDrawn;
       row.totalMoneyCents += standing.moneyCents;
-      if (draft.format === "Team") {
+      if (isTeamDraft(draft)) {
         const participant = draft.participants.find((item) => item.id === standing.participantId);
         row.teamDraftsPlayed += 1;
         if (participant?.team && participant.team === draft.winningTeam) {
@@ -156,6 +144,10 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       averageMoneyCents: row.draftsPlayed ? Math.round(row.totalMoneyCents / row.draftsPlayed) : 0
     };
   });
+}
+
+function isTeamDraft(draft: DraftEvent) {
+  return isTeamDraftFormat(draft.format) || hasTeamDraftData(draft);
 }
 
 export function playerTrendSeries(players: Player[], drafts: DraftEvent[]) {

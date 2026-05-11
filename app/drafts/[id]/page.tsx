@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Edit3 } from "lucide-react";
 import { getDraft, getPlayers } from "@/lib/data";
 import { money, standingsForDraft } from "@/lib/stats";
+import { isTeamDraftFormat } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
             <h1 style={{ margin: 0, fontSize: 28 }}>{draft.title}</h1>
             <div className="muted">
               {draft.eventDate} · {draft.format} · {draft.draftType} · {draft.participants.length} players · Stake {money(draft.defaultStakeCents)}
-              {draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam} won` : ""}
+              {isTeamDraftFormat(draft.format) && draft.winningTeam ? ` · Team ${draft.winningTeam} won` : ""}
             </div>
           </div>
           <a className="button primary" href={`/drafts/${draft.id}/edit`}><Edit3 size={16} /> Edit</a>
@@ -30,7 +31,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="grid split">
-        {draft.format === "Team" ? (
+        {isTeamDraftFormat(draft.format) ? (
           <div className="panel panel-pad">
             <div className="section-title"><h2>Draft Winner</h2></div>
             <strong>{draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set"}</strong>
@@ -154,7 +155,7 @@ function sidebetWinnerName(draft: NonNullable<Awaited<ReturnType<typeof getDraft
   const a = draft.participants.find((participant) => participant.id === playerAId);
   const b = draft.participants.find((participant) => participant.id === playerBId);
   if (!a || !b) return "";
-  if (draft.format === "Team" && draft.winningTeam) {
+  if (isTeamDraftFormat(draft.format) && draft.winningTeam) {
     if (a.team === b.team) return "";
     return a.team === draft.winningTeam ? a.displayNameSnapshot : b.displayNameSnapshot;
   }

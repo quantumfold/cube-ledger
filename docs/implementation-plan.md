@@ -22,7 +22,7 @@ create table draft_events (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   event_date date not null,
-  format text not null check (format in ('Individual', 'Team')),
+  format text not null check (format in ('Individual', 'Teams Before Draft', 'Teams After Draft')),
   draft_type text not null check (draft_type in ('Vintage', 'Andrew Cube', 'Morgan Cube')),
   custom_draft_type text,
   winning_team text check (winning_team in ('A', 'B')),
@@ -159,14 +159,14 @@ create index deck_images_participant_idx on deck_images (draft_participant_id, c
 ## Validation Rules
 
 - Drafts require title, date, format, draft type, at least two participants, and non-negative default stake.
-- Format is only `Individual` or `Team`; draft type starts with `Vintage`, `Andrew Cube`, and `Morgan Cube`.
+- Format is only `Individual`, `Teams Before Draft`, or `Teams After Draft`; draft type starts with `Vintage`, `Andrew Cube`, and `Morgan Cube`.
 - Team drafts require every participant to be assigned Team A or Team B before finalizing, and may store the winning team.
 - Each match requires two different participants from the same draft.
 - Game win/loss/draw counts must be non-negative integers.
 - Match sidebets default to no sidebet. If present, sidebet amount must be non-negative and the sidebet winner must be one of the match participants.
 - Money net values may be positive, negative, or zero; all values are stored in cents.
-- Draft standings and lifetime money are derived from format-specific stake rules and sidebets.
-- Team drafts pay each player based on the winning team, not individual match record.
+- Draft standings and lifetime money are derived from format-specific stake rules.
+- Team drafts pay each player the default stake based on the winning team, not individual match record or sidebets.
 - Individual drafts pay each match winner the draft stake plus any sidebet on that match.
 - Participant display names are snapshotted to preserve history after profile changes.
 - Each draft participant can have at most two uploaded deck photos. Photos are stored in the private `deck-images` Supabase Storage bucket and referenced by `deck_images.storage_path`.

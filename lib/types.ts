@@ -75,7 +75,7 @@ export type DraftEvent = {
   id: string;
   title: string;
   eventDate: string;
-  format: "Individual" | "Team";
+  format: DraftFormat;
   draftType: string;
   winningTeam?: "A" | "B";
   defaultStakeCents: number;
@@ -87,6 +87,24 @@ export type DraftEvent = {
   moneyResults: MoneyResult[];
   auditLog: AuditLogEntry[];
 };
+
+export type DraftFormat = "Individual" | "Teams Before Draft" | "Teams After Draft";
+
+export const draftFormats: DraftFormat[] = ["Individual", "Teams Before Draft", "Teams After Draft"];
+
+export function normalizeDraftFormat(format: unknown): DraftFormat | null {
+  if (format === "Individual" || format === "Teams Before Draft" || format === "Teams After Draft") return format;
+  if (format === "Team") return "Teams After Draft";
+  return null;
+}
+
+export function isTeamDraftFormat(format: DraftFormat) {
+  return format === "Teams Before Draft" || format === "Teams After Draft";
+}
+
+export function hasTeamDraftData(draft: DraftEvent) {
+  return Boolean(draft.winningTeam && draft.participants.some((participant) => participant.team === "A" || participant.team === "B"));
+}
 
 export type PlayerStats = {
   playerId: string;

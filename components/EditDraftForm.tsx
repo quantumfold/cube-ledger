@@ -3,7 +3,8 @@
 import { Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { DeckImage, DraftEvent } from "@/lib/types";
+import { standingsForDraft } from "@/lib/stats";
+import { DeckImage, draftFormats, DraftEvent, isTeamDraftFormat } from "@/lib/types";
 
 type ParticipantEdit = {
   id: string;
@@ -44,6 +45,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const [stake, setStake] = useState(String(draft.defaultStakeCents / 100));
   const [notes, setNotes] = useState(draft.notes);
   const [participants, setParticipants] = useState<ParticipantEdit[]>(() => draft.participants.map((participant) => {
+    const derivedStanding = isTeamDraftFormat(draft.format) ? standingsForDraft(draft).find((standing) => standing.participantId === participant.id) : null;
     const moneyResult = draft.moneyResults.find((result) => result.participantId === participant.id);
     return {
       id: participant.id,
@@ -53,7 +55,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
       strategy: participant.strategy,
       deckNotes: participant.deckNotes,
       decklist: participant.decklist ?? "",
-      money: String((moneyResult?.netCents ?? 0) / 100),
+      money: String((derivedStanding?.moneyCents ?? moneyResult?.netCents ?? 0) / 100),
       moneyNotes: moneyResult?.notes ?? ""
     };
   }));
@@ -100,7 +102,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
           eventDate,
           format,
           draftType,
-          winningTeam: format === "Team" ? winningTeam || null : null,
+          winningTeam: isTeamDraftFormat(format) ? winningTeam || null : null,
           defaultStake: stake,
           notes,
           participants,
@@ -248,8 +250,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
           <input aria-label="Draft title" value={title} onChange={(event) => setTitle(event.target.value)} />
           <input aria-label="Draft date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} />
           <select aria-label="Format" value={format} onChange={(event) => setFormat(event.target.value as DraftEvent["format"])}>
-            <option>Individual</option>
-            <option>Team</option>
+            {draftFormats.map((draftFormat) => <option key={draftFormat}>{draftFormat}</option>)}
           </select>
           <select aria-label="Draft type" value={draftType} onChange={(event) => setDraftType(event.target.value)}>
             <option>Vintage</option>
@@ -257,7 +258,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
             <option>Morgan Cube</option>
           </select>
           <input aria-label="Default stake" value={stake} onChange={(event) => setStake(event.target.value)} />
-          {format === "Team" ? (
+          {isTeamDraftFormat(format) ? (
             <select aria-label="Winning team" value={winningTeam} onChange={(event) => setWinningTeam(event.target.value as "" | "A" | "B")}>
               <option value="">Winning team not set</option>
               <option value="A">Team A won</option>
@@ -281,7 +282,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                 <tr key={participant.id}>
                   <td><strong>{participantNames.get(participant.id)}</strong></td>
                   <td>
-                    <select value={participant.team} onChange={(event) => updateParticipant(participant.id, { team: event.target.value as "" | "A" | "B" })} disabled={format !== "Team"}>
+                    <select value={participant.team} onChange={(event) => updateParticipant(participant.id, { team: event.target.value as "" | "A" | "B" })} disabled={!isTeamDraftFormat(format)}>
                       <option value="">N/A</option>
                       <option value="A">A</option>
                       <option value="B">B</option>

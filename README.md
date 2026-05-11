@@ -13,7 +13,7 @@ The app is built with Next.js, Supabase, and Google OAuth. Pages are hidden behi
 - Draft type options: Vintage, Andrew Cube, Morgan Cube
 - Team assignment and winning team for team drafts
 - Match result entry with wins, losses, draws, notes, and optional sidebets
-- Automatic money tracking from draft format, default stake, match winners, team winners, and sidebets
+- Automatic money tracking from draft format, default stake, match winners, team winners, and individual sidebets
 - Deck archetype, colors, strategy notes, deck notes, and optional decklists
 - Up to two uploaded deck photos per player per draft
 - Draft history table with edit and detail links
@@ -97,9 +97,8 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 
 ## Money Rules
 
-- New drafts default to `Team` format.
+- New drafts default to `Teams After Draft` format.
 - Team drafts: each player on the winning team gains the draft stake, and each player on the losing team loses the draft stake. Individual match records do not affect stake payout.
-- Team sidebets: if two players on opposing teams have a sidebet, the player on the draft-winning team gains the sidebet and the opposing player loses it.
 - Individual drafts: the match winner gains the draft stake plus any sidebet on that match, and the match loser loses the same amount.
 - Drawn individual matches do not move money for that match.
 

@@ -3,8 +3,10 @@ import { CalendarDays, Filter, Plus, Trophy } from "lucide-react";
 import { DraftTable } from "@/components/DraftTable";
 import { LineChart } from "@/components/LineChart";
 import { StatTable } from "@/components/StatTable";
+import { filterDashboardDrafts } from "@/lib/dashboard";
 import { getDrafts, getPlayers } from "@/lib/data";
 import { achievements, money, percent, playerStats, playerTrendSeries } from "@/lib/stats";
+import { draftFormats } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +25,7 @@ type DashboardSearchParams = {
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
   const filters = await searchParams;
   const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
-  const filteredDrafts = filterDrafts(drafts, filters);
+  const filteredDrafts = filterDashboardDrafts(drafts, filters);
   const stats = filterStats(playerStats(players, filteredDrafts), filters).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
   const achievementRows = achievements(stats, filteredDrafts);
   const { winRateSeries, moneySeries } = playerTrendSeries(players, filteredDrafts);
@@ -49,7 +51,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <form className="filters">
           <input name="start" type="date" aria-label="Start date" defaultValue={filters.start ?? ""} />
           <input name="end" type="date" aria-label="End date" defaultValue={filters.end ?? ""} />
-          <select name="format" aria-label="Draft format" defaultValue={filters.format ?? ""}><option value="">All formats</option><option>Individual</option><option>Team</option></select>
+          <select name="format" aria-label="Draft format" defaultValue={filters.format ?? ""}><option value="">All formats</option>{draftFormats.map((draftFormat) => <option key={draftFormat}>{draftFormat}</option>)}</select>
           <select name="draftType" aria-label="Draft type" defaultValue={filters.draftType ?? ""}><option value="">All draft types</option><option>Vintage</option><option>Andrew Cube</option><option>Morgan Cube</option></select>
           <select name="playerId" aria-label="Player" defaultValue={filters.playerId ?? ""}><option value="">All players</option>{players.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
           <input name="minDrafts" aria-label="Minimum drafts" placeholder="Min drafts" defaultValue={filters.minDrafts ?? ""} />
@@ -99,17 +101,6 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
     </>
   );
-}
-
-function filterDrafts(drafts: Awaited<ReturnType<typeof getDrafts>>, filters: DashboardSearchParams) {
-  return drafts.filter((draft) => {
-    if (filters.start && draft.eventDate < filters.start) return false;
-    if (filters.end && draft.eventDate > filters.end) return false;
-    if (filters.format && draft.format !== filters.format) return false;
-    if (filters.draftType && draft.draftType !== filters.draftType) return false;
-    if (filters.playerId && !draft.participants.some((participant) => participant.playerId === filters.playerId)) return false;
-    return true;
-  });
 }
 
 function filterStats(stats: ReturnType<typeof playerStats>, filters: DashboardSearchParams) {

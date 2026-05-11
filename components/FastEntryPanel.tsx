@@ -3,12 +3,12 @@
 import { Save } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Player } from "@/lib/types";
+import { draftFormats, DraftFormat, isTeamDraftFormat, Player } from "@/lib/types";
 
 export function FastEntryPanel({ players }: { players: Player[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
-  const [format, setFormat] = useState<"Individual" | "Team">("Team");
+  const [format, setFormat] = useState<DraftFormat>("Teams After Draft");
   const [draftType, setDraftType] = useState("Vintage");
   const [title, setTitle] = useState("Tuesday Cube Draft");
   const [eventDate, setEventDate] = useState("2026-05-05");
@@ -54,11 +54,11 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
           eventDate,
           format,
           draftType,
-          winningTeam: format === "Team" ? winningTeam || null : null,
+          winningTeam: isTeamDraftFormat(format) ? winningTeam || null : null,
           defaultStake: stake,
           notes,
           participantIds: selected,
-          teams: format === "Team" ? teams : {},
+          teams: isTeamDraftFormat(format) ? teams : {},
           initialMatch: playerAId && playerBId && playerAId !== playerBId ? {
             playerAId,
             playerBId,
@@ -90,9 +90,8 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
       <div className="entry-grid" style={{ marginTop: 14 }}>
         <input aria-label="Draft title" value={title} onChange={(event) => setTitle(event.target.value)} />
         <input aria-label="Draft date" type="date" value={eventDate} onChange={(event) => setEventDate(event.target.value)} />
-        <select aria-label="Draft format" value={format} onChange={(event) => setFormat(event.target.value as "Individual" | "Team")}>
-          <option>Individual</option>
-          <option>Team</option>
+        <select aria-label="Draft format" value={format} onChange={(event) => setFormat(event.target.value as DraftFormat)}>
+          {draftFormats.map((draftFormat) => <option key={draftFormat}>{draftFormat}</option>)}
         </select>
         <select aria-label="Draft type" value={draftType} onChange={(event) => setDraftType(event.target.value)}>
           {["Vintage", "Andrew Cube", "Morgan Cube"].map((type) => <option key={type}>{type}</option>)}
@@ -115,7 +114,7 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
           ))}
         </div>
       </div>
-      {format === "Team" ? (
+      {isTeamDraftFormat(format) ? (
         <div style={{ marginTop: 14 }}>
           <strong>Team setup</strong>
           <div className="entry-grid" style={{ marginTop: 8 }}>

@@ -55,7 +55,7 @@ export const drafts: DraftEvent[] = [
     id: "d2",
     title: "Team Draft After Dark",
     eventDate: "2026-04-12",
-    format: "Team",
+    format: "Teams After Draft",
     draftType: "Andrew Cube",
     winningTeam: "A",
     defaultStakeCents: 5000,

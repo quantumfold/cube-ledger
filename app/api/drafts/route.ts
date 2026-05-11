@@ -3,6 +3,7 @@ import { getCurrentAppUser } from "@/lib/auth";
 import { getDrafts } from "@/lib/data";
 import { standingsForDraft } from "@/lib/stats";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
+import { DraftFormat, isTeamDraftFormat, normalizeDraftFormat } from "@/lib/types";
 
 export async function GET() {
   const drafts = await getDrafts();
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       event_date: payload.eventDate,
       format: payload.format,
       draft_type: payload.draftType,
-      winning_team: payload.format === "Team" ? payload.winningTeam : null,
+      winning_team: isTeamDraftFormat(payload.format) ? payload.winningTeam : null,
       default_stake_cents: payload.defaultStakeCents,
       notes: payload.notes,
       created_by: createdBy,
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
       user_id: playerId,
       display_name_snapshot: player?.display_name ?? "Unknown Player",
       seat_order: index + 1,
-      team: payload.format === "Team" ? payload.teams[playerId] ?? null : null,
+      team: isTeamDraftFormat(payload.format) ? payload.teams[playerId] ?? null : null,
       deck_archetype: "",
       colors: [],
       strategy: "",
@@ -78,7 +79,7 @@ export async function POST(request: Request) {
     .insert(participants.map((participant) => ({
       draft_event_id: draft.id,
       draft_participant_id: participant.id,
-      net_cents: 0,
+      net_cents: moneyForParticipant(payload.format, payload.defaultStakeCents, payload.winningTeam, payload.teams[participant.user_id] ?? null, 0),
       created_by: createdBy,
       updated_by: createdBy
     })));
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
 type DraftPayload = {
   title: string;
   eventDate: string;
-  format: "Individual" | "Team";
+  format: DraftFormat;
   draftType: string;
   winningTeam: "A" | "B" | null;
   defaultStakeCents: number;
@@ -173,7 +174,7 @@ function validateDraftPayload(body: unknown): { value: DraftPayload; error?: nev
   const data = body as Record<string, unknown>;
   const title = typeof data.title === "string" ? data.title.trim() : "";
   const eventDate = typeof data.eventDate === "string" ? data.eventDate : "";
-  const format = data.format === "Team" ? "Team" : data.format === "Individual" ? "Individual" : null;
+  const format = normalizeDraftFormat(data.format);
   const draftType = typeof data.draftType === "string" ? data.draftType : "";
   const participantIds = Array.isArray(data.participantIds) ? data.participantIds.filter((id): id is string => typeof id === "string") : [];
   const uniqueParticipantIds = [...new Set(participantIds)];
@@ -182,7 +183,7 @@ function validateDraftPayload(body: unknown): { value: DraftPayload; error?: nev
 
   if (!title) return { error: "Draft title is required" };
   if (!eventDate) return { error: "Draft date is required" };
-  if (!format) return { error: "Draft format must be Individual or Team" };
+  if (!format) return { error: "Draft format must be Individual, Teams Before Draft, or Teams After Draft" };
   if (!["Vintage", "Andrew Cube", "Morgan Cube"].includes(draftType)) return { error: "Draft type is required" };
   if (uniqueParticipantIds.length < 2) return { error: "Select at least two players" };
   if (defaultStakeCents < 0) return { error: "Stake cannot be negative" };
@@ -191,7 +192,7 @@ function validateDraftPayload(body: unknown): { value: DraftPayload; error?: nev
   const teams: Record<string, "A" | "B"> = {};
   for (const participantId of uniqueParticipantIds) {
     const team = rawTeams[participantId];
-    if (format === "Team") {
+    if (isTeamDraftFormat(format)) {
       if (team !== "A" && team !== "B") return { error: "Every team draft player needs Team A or Team B" };
       teams[participantId] = team;
     }
@@ -257,6 +258,11 @@ function parseCents(value: unknown) {
   if (typeof value !== "string") return 0;
   const parsed = Number.parseFloat(value.replace(/[$,\s]/g, ""));
   return Number.isNaN(parsed) ? 0 : Math.round(parsed * 100);
+}
+
+function moneyForParticipant(format: DraftFormat, defaultStakeCents: number, winningTeam: "A" | "B" | null, team: "A" | "B" | null, fallbackCents: number) {
+  if (!isTeamDraftFormat(format) || !winningTeam || !team) return fallbackCents;
+  return team === winningTeam ? defaultStakeCents : -defaultStakeCents;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

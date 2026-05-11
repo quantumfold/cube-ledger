@@ -1,5 +1,5 @@
 import { Edit3, Eye } from "lucide-react";
-import { DraftEvent } from "@/lib/types";
+import { DraftEvent, isTeamDraftFormat } from "@/lib/types";
 import { money, standingsForDraft } from "@/lib/stats";
 
 export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
@@ -27,10 +27,10 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
               <tr key={draft.id}>
                 <td><a href={`/drafts/${draft.id}`}><strong>{draft.title}</strong></a></td>
                 <td>{draft.eventDate}</td>
-                <td>{draft.format}{draft.format === "Team" && draft.winningTeam ? ` · Team ${draft.winningTeam}` : ""}</td>
+                <td>{draft.format}{isTeamDraftFormat(draft.format) && draft.winningTeam ? ` · Team ${draft.winningTeam}` : ""}</td>
                 <td>{draft.draftType}</td>
                 <td>{draft.participants.length}</td>
-                <td>{draft.format === "Team" ? draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set" : standings[0]?.displayName ?? "N/A"}</td>
+                <td>{isTeamDraftFormat(draft.format) ? draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set" : standings[0]?.displayName ?? "N/A"}</td>
                 <td>{money(draft.defaultStakeCents)}</td>
                 <td className={netLeader?.moneyCents >= 0 ? "money-pos" : "money-neg"}>{netLeader ? `${netLeader.displayName} ${money(netLeader.moneyCents)}` : "N/A"}</td>
                 <td>

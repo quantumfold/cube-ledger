@@ -1,4 +1,4 @@
-import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, Player } from "@/lib/types";
+import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, normalizeDraftFormat, Player } from "@/lib/types";
 
 type DbUser = {
   id: string;
@@ -13,7 +13,7 @@ type DbDraft = {
   id: string;
   title: string;
   event_date: string;
-  format: DraftEvent["format"];
+  format: string;
   draft_type: string;
   winning_team: "A" | "B" | null;
   default_stake_cents: number;
@@ -107,7 +107,7 @@ export function mapDraft(row: DbDraft): DraftEvent {
     id: row.id,
     title: row.title,
     eventDate: row.event_date,
-    format: row.format,
+    format: normalizeDraftFormat(row.format) ?? "Teams After Draft",
     draftType: row.draft_type,
     winningTeam: row.winning_team ?? undefined,
     defaultStakeCents: row.default_stake_cents,
