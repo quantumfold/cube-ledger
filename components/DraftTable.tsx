@@ -15,14 +15,12 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
             <th>Players</th>
             <th>Winner</th>
             <th>Stake</th>
-            <th>Net Leader</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {drafts.map((draft) => {
             const standings = standingsForDraft(draft);
-            const netLeader = [...standings].sort((a, b) => b.moneyCents - a.moneyCents)[0];
             return (
               <tr key={draft.id}>
                 <td><a href={`/drafts/${draft.id}`}><strong>{draft.title}</strong></a></td>
@@ -32,7 +30,6 @@ export function DraftTable({ drafts }: { drafts: DraftEvent[] }) {
                 <td>{draft.participants.length}</td>
                 <td>{isTeamDraftFormat(draft.format) ? draft.winningTeam ? `Team ${draft.winningTeam}` : "Team winner not set" : standings[0]?.displayName ?? "N/A"}</td>
                 <td>{money(draft.defaultStakeCents)}</td>
-                <td className={netLeader?.moneyCents >= 0 ? "money-pos" : "money-neg"}>{netLeader ? `${netLeader.displayName} ${money(netLeader.moneyCents)}` : "N/A"}</td>
                 <td>
                   <div className="inline-actions">
                     <a className="button" href={`/drafts/${draft.id}`}><Eye size={16} /> View</a>
