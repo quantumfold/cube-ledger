@@ -101,9 +101,12 @@ export type PlayerStats = {
   gamesLost: number;
   gamesDrawn: number;
   firstPlaces: number;
+  teamDraftsPlayed: number;
+  teamDraftWins: number;
   totalMoneyCents: number;
   winRate: number;
   gameWinRate: number;
+  teamDraftWinRate: number;
   averageMoneyCents: number;
 };
 

@@ -54,6 +54,7 @@ export default async function PlayersPage({ searchParams }: { searchParams: Prom
       <section className="grid kpis">
         <div className="panel kpi"><span>Overall record</span><strong>{stats?.matchWins ?? 0}-{stats?.matchLosses ?? 0}-{stats?.matchDraws ?? 0}</strong></div>
         <div className="panel kpi"><span>Match win rate</span><strong>{percent(stats?.winRate ?? 0)}</strong></div>
+        <div className="panel kpi"><span>Team draft win rate</span><strong>{stats?.teamDraftsPlayed ? `${percent(stats.teamDraftWinRate)} (${stats.teamDraftWins}/${stats.teamDraftsPlayed})` : "N/A"}</strong></div>
         <div className="panel kpi"><span>Money won/lost</span><strong>{money(stats?.totalMoneyCents ?? 0)}</strong></div>
         <div className="panel kpi"><span>Drafts played</span><strong>{stats?.draftsPlayed ?? 0}</strong></div>
       </section>

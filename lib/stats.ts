@@ -108,9 +108,12 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       gamesLost: 0,
       gamesDrawn: 0,
       firstPlaces: 0,
+      teamDraftsPlayed: 0,
+      teamDraftWins: 0,
       totalMoneyCents: 0,
       winRate: 0,
       gameWinRate: 0,
+      teamDraftWinRate: 0,
       averageMoneyCents: 0
     });
   }
@@ -131,7 +134,11 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       row.totalMoneyCents += standing.moneyCents;
       if (draft.format === "Team") {
         const participant = draft.participants.find((item) => item.id === standing.participantId);
-        if (participant?.team && participant.team === draft.winningTeam) row.firstPlaces += 1;
+        row.teamDraftsPlayed += 1;
+        if (participant?.team && participant.team === draft.winningTeam) {
+          row.firstPlaces += 1;
+          row.teamDraftWins += 1;
+        }
       } else if (index === 0) {
         row.firstPlaces += 1;
       }
@@ -145,6 +152,7 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       ...row,
       winRate: decidedMatches ? row.matchWins / decidedMatches : 0,
       gameWinRate: decidedGames ? row.gamesWon / decidedGames : 0,
+      teamDraftWinRate: row.teamDraftsPlayed ? row.teamDraftWins / row.teamDraftsPlayed : 0,
       averageMoneyCents: row.draftsPlayed ? Math.round(row.totalMoneyCents / row.draftsPlayed) : 0
     };
   });

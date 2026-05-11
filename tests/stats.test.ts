@@ -87,8 +87,16 @@ test("team draft wins credit players on the winning team", () => {
     moneyResults: []
   };
   const stats = playerStats(players, [teamDraft]);
-  assert.equal(stats.find((row) => row.playerId === "p1")?.firstPlaces, 0);
-  assert.equal(stats.find((row) => row.playerId === "p2")?.firstPlaces, 1);
+  const lucas = stats.find((row) => row.playerId === "p1");
+  const david = stats.find((row) => row.playerId === "p2");
+  assert.equal(lucas?.firstPlaces, 0);
+  assert.equal(lucas?.teamDraftsPlayed, 1);
+  assert.equal(lucas?.teamDraftWins, 0);
+  assert.equal(lucas?.teamDraftWinRate, 0);
+  assert.equal(david?.firstPlaces, 1);
+  assert.equal(david?.teamDraftsPlayed, 1);
+  assert.equal(david?.teamDraftWins, 1);
+  assert.equal(david?.teamDraftWinRate, 1);
 });
 
 test("head-to-head records derive match outcomes", () => {
