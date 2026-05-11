@@ -159,14 +159,13 @@ function isTeamDraft(draft: DraftEvent) {
 }
 
 export function playerTrendSeries(players: Player[], drafts: DraftEvent[]) {
-  const colors = ["#0f766e", "#9a3412", "#2563eb", "#7c3aed", "#be123c", "#4d7c0f", "#c2410c", "#0f172a"];
+  const colors = ["#0f766e", "#9a3412", "#2563eb", "#7c3aed", "#be123c", "#4d7c0f", "#c2410c", "#0f172a", "#0891b2", "#a21caf", "#64748b", "#ca8a04"];
   const orderedDrafts = [...drafts].sort((a, b) => a.eventDate.localeCompare(b.eventDate));
-  const topPlayers = playerStats(players, drafts)
+  const activePlayers = playerStats(players, drafts)
     .filter((player) => player.draftsPlayed > 0)
-    .sort((a, b) => b.matchesPlayed - a.matchesPlayed || b.totalMoneyCents - a.totalMoneyCents)
-    .slice(0, 8);
+    .sort((a, b) => b.matchesPlayed - a.matchesPlayed || b.totalMoneyCents - a.totalMoneyCents);
 
-  const winRateSeries = topPlayers.map((player, playerIndex) => {
+  const winRateSeries = activePlayers.map((player, playerIndex) => {
     let wins = 0;
     let losses = 0;
     const points: Array<{ label: string; value: number }> = [];
@@ -185,7 +184,7 @@ export function playerTrendSeries(players: Player[], drafts: DraftEvent[]) {
     return { name: player.displayName, color: colors[playerIndex % colors.length], points };
   });
 
-  const moneySeries = topPlayers.map((player, playerIndex) => {
+  const moneySeries = activePlayers.map((player, playerIndex) => {
     let total = 0;
     const points: Array<{ label: string; value: number }> = [];
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { filterDashboardDrafts } from "../lib/dashboard.ts";
-import { headToHeadForPlayer, playerStats, standingsForDraft } from "../lib/stats.ts";
+import { headToHeadForPlayer, playerStats, playerTrendSeries, standingsForDraft } from "../lib/stats.ts";
 import type { DraftEvent, Player } from "../lib/types.ts";
 
 const players: Player[] = [
@@ -246,4 +246,44 @@ test("dashboard excludes legacy drafts unless requested", () => {
     filterDashboardDrafts([legacyDraft, modernDraft], { includeLegacy: "1" }).map((item) => item.id),
     ["legacy", "modern"]
   );
+});
+
+test("trend series includes every active player", () => {
+  const manyPlayers: Player[] = Array.from({ length: 12 }, (_, index) => ({
+    id: `p${index + 1}`,
+    displayName: `Player ${index + 1}`,
+    email: `player${index + 1}@example.com`,
+    role: "player",
+    loginEnabled: true,
+    showOnLeaderboard: true
+  }));
+  const manyPlayerDraft: DraftEvent = {
+    ...draft,
+    participants: manyPlayers.map((player, index) => ({
+      id: `dp${index + 1}`,
+      draftEventId: "d1",
+      playerId: player.id,
+      displayNameSnapshot: player.displayName,
+      seatOrder: index + 1,
+      deckArchetype: "",
+      colors: [],
+      strategy: "",
+      deckNotes: ""
+    })),
+    matches: manyPlayers.slice(1).map((player, index) => ({
+      id: `match-${index + 1}`,
+      draftEventId: "d1",
+      roundLabel: `Match ${index + 1}`,
+      playerAId: "dp1",
+      playerBId: `dp${index + 2}`,
+      playerAWins: 2,
+      playerBWins: 0,
+      draws: 0,
+      sidebetCents: 0
+    }))
+  };
+
+  const { winRateSeries, moneySeries } = playerTrendSeries(manyPlayers, [manyPlayerDraft]);
+  assert.equal(winRateSeries.length, 12);
+  assert.equal(moneySeries.length, 12);
 });
