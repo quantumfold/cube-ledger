@@ -12,8 +12,8 @@ export function percent(value: number) {
 
 export function standingsForDraft(draft: DraftEvent): Standing[] {
   const rows = new Map<string, Standing>();
+  const participantsById = new Map(draft.participants.map((participant) => [participant.id, participant]));
   for (const participant of draft.participants) {
-    const moneyResult = draft.moneyResults.find((result) => result.participantId === participant.id);
     rows.set(participant.id, {
       participantId: participant.id,
       playerId: participant.playerId,
@@ -25,7 +25,7 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
       gamesLost: 0,
       gamesDrawn: 0,
       points: 0,
-      moneyCents: moneyResult?.netCents ?? 0,
+      moneyCents: 0,
       deckArchetype: participant.deckArchetype,
       colors: participant.colors
     });
@@ -57,13 +57,35 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
       b.points += 1;
     }
 
-    if (match.sidebetCents > 0 && match.sidebetWinnerParticipantId) {
-      const winner = rows.get(match.sidebetWinnerParticipantId);
-      const loser = match.sidebetWinnerParticipantId === match.playerAId ? b : a;
-      if (winner && loser) {
-        winner.moneyCents += match.sidebetCents;
-        loser.moneyCents -= match.sidebetCents;
+    if (draft.format === "Individual") {
+      const stake = draft.defaultStakeCents + match.sidebetCents;
+      if (match.playerAWins > match.playerBWins) {
+        a.moneyCents += stake;
+        b.moneyCents -= stake;
+      } else if (match.playerBWins > match.playerAWins) {
+        b.moneyCents += stake;
+        a.moneyCents -= stake;
       }
+    }
+  }
+
+  if (draft.format === "Team" && draft.winningTeam) {
+    for (const participant of draft.participants) {
+      const row = rows.get(participant.id);
+      if (!row) continue;
+      row.moneyCents += participant.team === draft.winningTeam ? draft.defaultStakeCents : -draft.defaultStakeCents;
+    }
+
+    for (const match of draft.matches) {
+      if (match.sidebetCents <= 0) continue;
+      const participantA = participantsById.get(match.playerAId);
+      const participantB = participantsById.get(match.playerBId);
+      if (!participantA || !participantB || participantA.team === participantB.team) continue;
+      const winner = participantA.team === draft.winningTeam ? rows.get(participantA.id) : rows.get(participantB.id);
+      const loser = participantA.team === draft.winningTeam ? rows.get(participantB.id) : rows.get(participantA.id);
+      if (!winner || !loser) continue;
+      winner.moneyCents += match.sidebetCents;
+      loser.moneyCents -= match.sidebetCents;
     }
   }
 

@@ -231,7 +231,7 @@ function validateInitialMatch(raw: unknown, participantIds: string[]): DraftPayl
   const sidebetCents = parseCents(raw.sidebetAmount);
   if (sidebetCents < 0) return "Sidebet cannot be negative";
   const sidebetWinnerId = typeof raw.sidebetWinnerId === "string" && raw.sidebetWinnerId ? raw.sidebetWinnerId : null;
-  if (sidebetCents > 0 && (!sidebetWinnerId || ![playerAId, playerBId].includes(sidebetWinnerId))) {
+  if (sidebetWinnerId && ![playerAId, playerBId].includes(sidebetWinnerId)) {
     return "Sidebet winner must be one of the match players";
   }
   const notes = typeof raw.notes === "string" ? raw.notes.trim() : "";

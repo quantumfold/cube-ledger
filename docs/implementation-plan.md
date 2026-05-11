@@ -165,7 +165,9 @@ create index deck_images_participant_idx on deck_images (draft_participant_id, c
 - Game win/loss/draw counts must be non-negative integers.
 - Match sidebets default to no sidebet. If present, sidebet amount must be non-negative and the sidebet winner must be one of the match participants.
 - Money net values may be positive, negative, or zero; all values are stored in cents.
-- Draft standings and lifetime money include manual money results plus match sidebet wins/losses.
+- Draft standings and lifetime money are derived from format-specific stake rules and sidebets.
+- Team drafts pay each player based on the winning team, not individual match record.
+- Individual drafts pay each match winner the draft stake plus any sidebet on that match.
 - Participant display names are snapshotted to preserve history after profile changes.
 - Each draft participant can have at most two uploaded deck photos. Photos are stored in the private `deck-images` Supabase Storage bucket and referenced by `deck_images.storage_path`.
 - Draft deletion is soft-delete. Deleted drafts are excluded from app reads but remain available for audit review in the database.

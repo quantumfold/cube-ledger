@@ -33,12 +33,12 @@ const draft: DraftEvent = {
       playerBWins: 1,
       draws: 0,
       sidebetCents: 1000,
-      sidebetWinnerParticipantId: "dp1"
+      sidebetWinnerParticipantId: undefined
     }
   ],
   moneyResults: [
-    { id: "mr1", draftEventId: "d1", participantId: "dp1", netCents: 5000 },
-    { id: "mr2", draftEventId: "d1", participantId: "dp2", netCents: -5000 }
+    { id: "mr1", draftEventId: "d1", participantId: "dp1", netCents: 0 },
+    { id: "mr2", draftEventId: "d1", participantId: "dp2", netCents: 0 }
   ],
   auditLog: []
 };
@@ -66,4 +66,37 @@ test("head-to-head records derive match outcomes", () => {
   assert.equal(rows[0].opponentId, "p2");
   assert.equal(rows[0].wins, 1);
   assert.equal(rows[0].losses, 0);
+});
+
+test("team draft money follows team result and team sidebets, not match record", () => {
+  const teamDraft: DraftEvent = {
+    ...draft,
+    id: "team-draft",
+    format: "Team",
+    winningTeam: "B",
+    participants: [
+      { ...draft.participants[0], id: "tdp1", draftEventId: "team-draft", team: "A" },
+      { ...draft.participants[1], id: "tdp2", draftEventId: "team-draft", team: "B" }
+    ],
+    matches: [
+      {
+        id: "tm1",
+        draftEventId: "team-draft",
+        roundLabel: "Round 1",
+        playerAId: "tdp1",
+        playerBId: "tdp2",
+        playerAWins: 2,
+        playerBWins: 0,
+        draws: 0,
+        sidebetCents: 1000
+      }
+    ],
+    moneyResults: []
+  };
+
+  const standings = standingsForDraft(teamDraft);
+  const teamA = standings.find((row) => row.participantId === "tdp1");
+  const teamB = standings.find((row) => row.participantId === "tdp2");
+  assert.equal(teamA?.moneyCents, -6000);
+  assert.equal(teamB?.moneyCents, 6000);
 });

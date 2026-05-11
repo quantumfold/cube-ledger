@@ -354,7 +354,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
         </div>
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Match</th><th>A Wins</th><th>B Wins</th><th>Draws</th><th>Sidebet</th><th>Sidebet Winner</th><th>Notes</th><th>Remove</th></tr></thead>
+            <thead><tr><th>Match</th><th>A Wins</th><th>B Wins</th><th>Draws</th><th>Sidebet</th><th>Notes</th><th>Remove</th></tr></thead>
             <tbody>
               {matches.filter((match) => !removedMatchIds.includes(match.id)).map((match) => {
                 const source = draft.matches.find((item) => item.id === match.id);
@@ -367,21 +367,12 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                     <td><input value={match.playerBWins} onChange={(event) => updateMatch(match.id, { playerBWins: event.target.value })} /></td>
                     <td><input value={match.draws} onChange={(event) => updateMatch(match.id, { draws: event.target.value })} /></td>
                     <td><input value={match.sidebet} onChange={(event) => updateMatch(match.id, { sidebet: event.target.value })} /></td>
-                    <td>
-                      <select value={match.sidebetWinnerParticipantId} onChange={(event) => updateMatch(match.id, { sidebetWinnerParticipantId: event.target.value })}>
-                        <option value="">None</option>
-                        {source ? <option value={source.playerAId}>{a}</option> : null}
-                        {source ? <option value={source.playerBId}>{b}</option> : null}
-                      </select>
-                    </td>
                     <td><input value={match.notes} onChange={(event) => updateMatch(match.id, { notes: event.target.value })} /></td>
                     <td><button type="button" className="text-button" onClick={() => setRemovedMatchIds((current) => [...current, match.id])}>Remove</button></td>
                   </tr>
                 );
               })}
               {newMatches.map((match) => {
-                const a = participantNames.get(match.playerAId);
-                const b = participantNames.get(match.playerBId);
                 return (
                   <tr key={match.clientId}>
                     <td>
@@ -397,13 +388,6 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                     <td><input value={match.playerBWins} onChange={(event) => updateNewMatch(match.clientId, { playerBWins: event.target.value })} /></td>
                     <td><input value={match.draws} onChange={(event) => updateNewMatch(match.clientId, { draws: event.target.value })} /></td>
                     <td><input value={match.sidebet} onChange={(event) => updateNewMatch(match.clientId, { sidebet: event.target.value })} /></td>
-                    <td>
-                      <select value={match.sidebetWinnerParticipantId} onChange={(event) => updateNewMatch(match.clientId, { sidebetWinnerParticipantId: event.target.value })}>
-                        <option value="">None</option>
-                        <option value={match.playerAId}>{a}</option>
-                        <option value={match.playerBId}>{b}</option>
-                      </select>
-                    </td>
                     <td><input value={match.notes} onChange={(event) => updateNewMatch(match.clientId, { notes: event.target.value })} /></td>
                     <td><button type="button" className="text-button" onClick={() => setNewMatches((current) => current.filter((item) => item.clientId !== match.clientId))}>Remove</button></td>
                   </tr>

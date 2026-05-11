@@ -307,7 +307,6 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
     const sidebetWinnerParticipantId = typeof raw.sidebetWinnerParticipantId === "string" && raw.sidebetWinnerParticipantId ? raw.sidebetWinnerParticipantId : null;
     if (!source || playerAWins < 0 || playerBWins < 0 || draws < 0 || sidebetCents < 0) return null;
     if (sidebetWinnerParticipantId && ![source.playerAId, source.playerBId].includes(sidebetWinnerParticipantId)) return null;
-    if (sidebetCents > 0 && !sidebetWinnerParticipantId) return null;
     return {
       id: raw.id,
       playerAWins,
@@ -338,7 +337,6 @@ function validateEditPayload(body: unknown, draft: Awaited<ReturnType<typeof get
     if (!participantIdSet.has(playerAId) || !participantIdSet.has(playerBId) || playerAId === playerBId) return null;
     if (playerAWins < 0 || playerBWins < 0 || draws < 0 || sidebetCents < 0) return null;
     if (sidebetWinnerParticipantId && ![playerAId, playerBId].includes(sidebetWinnerParticipantId)) return null;
-    if (sidebetCents > 0 && !sidebetWinnerParticipantId) return null;
     return {
       playerAId,
       playerBId,

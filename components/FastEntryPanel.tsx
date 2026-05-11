@@ -8,7 +8,7 @@ import { Player } from "@/lib/types";
 export function FastEntryPanel({ players }: { players: Player[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>([]);
-  const [format, setFormat] = useState<"Individual" | "Team">("Individual");
+  const [format, setFormat] = useState<"Individual" | "Team">("Team");
   const [draftType, setDraftType] = useState("Vintage");
   const [title, setTitle] = useState("Tuesday Cube Draft");
   const [eventDate, setEventDate] = useState("2026-05-05");
@@ -20,7 +20,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   const [playerBId, setPlayerBId] = useState("");
   const [matchResult, setMatchResult] = useState("2-1");
   const [sidebetAmount, setSidebetAmount] = useState("$0");
-  const [sidebetWinnerId, setSidebetWinnerId] = useState("");
   const [matchNotes, setMatchNotes] = useState("");
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -34,7 +33,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   useEffect(() => {
     setPlayerAId((current) => current && selected.includes(current) ? current : selected[0] ?? "");
     setPlayerBId((current) => current && selected.includes(current) ? current : selected[1] ?? selected[0] ?? "");
-    setSidebetWinnerId((current) => current && selected.includes(current) ? current : "");
     setTeams((current) => {
       const next: Record<string, "A" | "B"> = {};
       selected.forEach((id, index) => {
@@ -66,7 +64,7 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
             playerBId,
             result: matchResult,
             sidebetAmount,
-            sidebetWinnerId: sidebetWinnerId || null,
+            sidebetWinnerId: null,
             notes: matchNotes
           } : null
         })
@@ -147,10 +145,6 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
           {["2-0", "2-1", "1-1-1", "1-2", "0-2"].map((result) => <option key={result}>{result}</option>)}
         </select>
         <input aria-label="Sidebet amount" placeholder="Sidebet, default $0" value={sidebetAmount} onChange={(event) => setSidebetAmount(event.target.value)} />
-        <select aria-label="Sidebet winner" value={sidebetWinnerId} onChange={(event) => setSidebetWinnerId(event.target.value)}>
-          <option value="">No sidebet</option>
-          {selectedPlayers.map((player) => <option key={player.id} value={player.id}>{player.displayName} won sidebet</option>)}
-        </select>
         <input aria-label="Match notes" placeholder="Notes" value={matchNotes} onChange={(event) => setMatchNotes(event.target.value)} />
       </div>
       <div className="inline-actions" style={{ marginTop: 14 }}>

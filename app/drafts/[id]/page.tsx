@@ -79,7 +79,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
               {draft.matches.map((match) => {
                 const a = draft.participants.find((participant) => participant.id === match.playerAId);
                 const b = draft.participants.find((participant) => participant.id === match.playerBId);
-                const sidebetWinner = draft.participants.find((participant) => participant.id === match.sidebetWinnerParticipantId);
+                const sidebetWinner = sidebetWinnerName(draft, match.playerAId, match.playerBId, match.playerAWins, match.playerBWins);
                 return (
                   <tr key={match.id}>
                     <td>{match.roundLabel}</td>
@@ -87,7 +87,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
                     <td>{b?.displayNameSnapshot}</td>
                     <td><strong>{match.playerAWins}-{match.playerBWins}</strong></td>
                     <td>{match.draws}</td>
-                    <td>{match.sidebetCents > 0 && sidebetWinner ? `${sidebetWinner.displayNameSnapshot} ${money(match.sidebetCents)}` : "None"}</td>
+                    <td>{match.sidebetCents > 0 && sidebetWinner ? `${sidebetWinner} ${money(match.sidebetCents)}` : "None"}</td>
                     <td className="muted">{match.notes ?? ""}</td>
                   </tr>
                 );
@@ -142,4 +142,17 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
       </section>
     </div>
   );
+}
+
+function sidebetWinnerName(draft: NonNullable<Awaited<ReturnType<typeof getDraft>>>, playerAId: string, playerBId: string, playerAWins: number, playerBWins: number) {
+  const a = draft.participants.find((participant) => participant.id === playerAId);
+  const b = draft.participants.find((participant) => participant.id === playerBId);
+  if (!a || !b) return "";
+  if (draft.format === "Team" && draft.winningTeam) {
+    if (a.team === b.team) return "";
+    return a.team === draft.winningTeam ? a.displayNameSnapshot : b.displayNameSnapshot;
+  }
+  if (playerAWins > playerBWins) return a.displayNameSnapshot;
+  if (playerBWins > playerAWins) return b.displayNameSnapshot;
+  return "";
 }
