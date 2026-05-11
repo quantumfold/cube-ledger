@@ -1,18 +1,18 @@
 import { DraftEvent, Player } from "./types";
 
 export const players: Player[] = [
-  { id: "p1", googleId: "google-lucas-siow", displayName: "Lucas Siow", email: "lucas.siow@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=47", role: "admin" },
-  { id: "p2", googleId: "google-david-ledvinka", displayName: "David Ledvinka", email: "dledvinkamath@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=12", role: "organizer" },
-  { id: "p3", googleId: "google-daniel-founier", displayName: "Daniel Founier", email: "tirentu@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=33", role: "organizer" },
-  { id: "p4", googleId: "google-jamie-naylor", displayName: "Jamie Naylor", email: "jmbnaylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=5", role: "organizer" },
-  { id: "p5", googleId: "google-tyler-longo", displayName: "Tyler Longo", email: "tylerlongo77@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=60", role: "organizer" },
-  { id: "p6", googleId: "google-maksym-gryn", displayName: "Maksym Gryn", email: "maksg7@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=9", role: "organizer" },
-  { id: "p7", googleId: "google-morgan-mclaughlin", displayName: "Morgan McLaughlin", email: "fozefy@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=20", role: "organizer" },
-  { id: "p8", googleId: "google-andrew-naylor", displayName: "Andrew Naylor", email: "andrew.s.naylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=52", role: "organizer" },
-  { id: "p9", googleId: "google-brian-liu", displayName: "Brian Liu", email: "liuwk.brian@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=64", role: "organizer" },
-  { id: "p10", googleId: "google-fadi-hirmiz", displayName: "Fadi Hirmiz", email: "zimrih.idaf@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=15", role: "organizer" },
-  { id: "p11", googleId: "google-paul-dean", displayName: "Paul Dean", email: "pdean2012@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=58", role: "organizer" },
-  { id: "p12", googleId: "google-chris-harabas", displayName: "Chris Harabas", email: "13arabas@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=3", role: "organizer" }
+  { id: "p1", googleId: "google-lucas-siow", displayName: "Lucas Siow", email: "lucas.siow@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=47", role: "admin", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p2", googleId: "google-david-ledvinka", displayName: "David Ledvinka", email: "dledvinkamath@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=12", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p3", googleId: "google-daniel-founier", displayName: "Daniel Founier", email: "tirentu@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=33", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p4", googleId: "google-jamie-naylor", displayName: "Jamie Naylor", email: "jmbnaylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=5", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p5", googleId: "google-tyler-longo", displayName: "Tyler Longo", email: "tylerlongo77@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=60", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p6", googleId: "google-maksym-gryn", displayName: "Maksym Gryn", email: "maksg7@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=9", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p7", googleId: "google-morgan-mclaughlin", displayName: "Morgan McLaughlin", email: "fozefy@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=20", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p8", googleId: "google-andrew-naylor", displayName: "Andrew Naylor", email: "andrew.s.naylor@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=52", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p9", googleId: "google-brian-liu", displayName: "Brian Liu", email: "liuwk.brian@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=64", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p10", googleId: "google-fadi-hirmiz", displayName: "Fadi Hirmiz", email: "zimrih.idaf@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=15", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p11", googleId: "google-paul-dean", displayName: "Paul Dean", email: "pdean2012@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=58", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+  { id: "p12", googleId: "google-chris-harabas", displayName: "Chris Harabas", email: "13arabas@gmail.com", profileImageUrl: "https://i.pravatar.cc/80?img=3", role: "organizer", loginEnabled: true, showOnLeaderboard: true }
 ];
 
 export const drafts: DraftEvent[] = [
@@ -46,6 +46,7 @@ export const drafts: DraftEvent[] = [
       { id: "mr3", draftEventId: "d1", participantId: "d1p3", netCents: 10000 },
       { id: "mr4", draftEventId: "d1", participantId: "d1p4", netCents: -10000 }
     ],
+    sidebets: [],
     auditLog: [
       { id: "a1", entityType: "DraftEvent", entityId: "d1", action: "created", changedBy: "p1", changedAt: "2026-04-26T23:10:00Z", summary: "Created draft with four participants." },
       { id: "a2", entityType: "Match", entityId: "m5", action: "updated", changedBy: "p2", changedAt: "2026-04-27T00:02:00Z", summary: "Corrected Round 3 result to 2-1." }
@@ -80,6 +81,7 @@ export const drafts: DraftEvent[] = [
       { id: "mr7", draftEventId: "d2", participantId: "d2p3", netCents: 10000 },
       { id: "mr8", draftEventId: "d2", participantId: "d2p4", netCents: -5000 }
     ],
+    sidebets: [],
     auditLog: [{ id: "a3", entityType: "MoneyResult", entityId: "mr7", action: "updated", changedBy: "p2", changedAt: "2026-04-12T22:45:00Z", summary: "Entered final team draft payout." }]
   }
 ];

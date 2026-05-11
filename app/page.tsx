@@ -26,9 +26,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const filters = await searchParams;
   const [players, drafts] = await Promise.all([getPlayers(), getDrafts()]);
   const filteredDrafts = filterDashboardDrafts(drafts, filters);
-  const stats = filterStats(playerStats(players, filteredDrafts), filters).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
+  const dashboardPlayers = players.filter((player) => player.showOnLeaderboard);
+  const stats = filterStats(playerStats(dashboardPlayers, filteredDrafts), filters).sort((a, b) => b.winRate - a.winRate || b.totalMoneyCents - a.totalMoneyCents);
   const achievementRows = achievements(stats, filteredDrafts);
-  const { winRateSeries, moneySeries } = playerTrendSeries(players, filteredDrafts);
+  const { winRateSeries, moneySeries } = playerTrendSeries(dashboardPlayers, filteredDrafts);
 
   return (
     <>
@@ -63,15 +64,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         </form>
       </section>
 
-      <section className="grid split" style={{ marginTop: 18 }}>
-        <div className="panel panel-pad">
-          <div className="section-title"><h2>Match Win Percentage Over Time</h2><span className="pill">Top active players</span></div>
-          <LineChart series={winRateSeries} formatValue={percent} emptyLabel="Add match results to see win-rate trends." />
-        </div>
-        <div className="panel panel-pad">
-          <div className="section-title"><h2>Total Money Over Time</h2><span className="pill">Cumulative</span></div>
-          <LineChart series={moneySeries} formatValue={money} emptyLabel="Add money results to see cumulative totals." />
-        </div>
+      <section className="panel panel-pad" style={{ marginTop: 18 }}>
+        <div className="section-title"><h2>Match Win Percentage Over Time</h2><span className="pill">Top active players</span></div>
+        <LineChart series={winRateSeries} formatValue={percent} emptyLabel="Add match results to see win-rate trends." />
+      </section>
+
+      <section className="panel panel-pad" style={{ marginTop: 18 }}>
+        <div className="section-title"><h2>Total Money Over Time</h2><span className="pill">Cumulative</span></div>
+        <LineChart series={moneySeries} formatValue={money} emptyLabel="Add money results to see cumulative totals." />
       </section>
 
       <section className="grid split" style={{ marginTop: 18 }}>

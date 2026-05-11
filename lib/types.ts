@@ -7,6 +7,8 @@ export type Player = {
   email: string;
   profileImageUrl?: string;
   role: Role;
+  loginEnabled: boolean;
+  showOnLeaderboard: boolean;
 };
 
 export type DraftParticipant = {
@@ -61,6 +63,16 @@ export type MoneyResult = {
   notes?: string;
 };
 
+export type Sidebet = {
+  id: string;
+  draftEventId: string;
+  winnerParticipantId: string;
+  loserParticipantId: string;
+  amountCents: number;
+  matchId?: string;
+  notes?: string;
+};
+
 export type AuditLogEntry = {
   id: string;
   entityType: string;
@@ -85,6 +97,7 @@ export type DraftEvent = {
   participants: DraftParticipant[];
   matches: Match[];
   moneyResults: MoneyResult[];
+  sidebets: Sidebet[];
   auditLog: AuditLogEntry[];
 };
 

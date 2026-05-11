@@ -1,0 +1,31 @@
+legacy_draft_id,draft_key,sidebet_key,winner,loser,amount_cents,inferred_match_players,status
+16,legacy-16,legacy-16-sidebet-1,Maksym Gryn,Lucas Siow,10000,Lucas Siow vs Maksym Gryn,matched to source match
+17,legacy-17,legacy-17-sidebet-1,Lucas Siow,Brian Liu,6000,Lucas Siow vs Brian Liu,matched to source match
+17,legacy-17,legacy-17-sidebet-2,Lucas Siow,Tyler Longo,6000,Lucas Siow vs Tyler Longo,matched to source match
+17,legacy-17,legacy-17-sidebet-3,Lucas Siow,Maksym Gryn,10000,Lucas Siow vs Maksym Gryn,matched to source match
+18,legacy-18,legacy-18-sidebet-1,Lucas Siow,Maksym Gryn,10000,,paired by amount
+18,legacy-18,legacy-18-sidebet-2,Lucas Siow,Brian Liu,6000,,paired by amount
+19,legacy-19,legacy-19-sidebet-1,Lucas Siow,Brian Liu,6000,Brian Liu vs Lucas Siow,matched to source match
+20,legacy-20,legacy-20-sidebet-1,Brian Liu,Lucas Siow,6000,,paired by amount
+24,legacy-24,legacy-24-sidebet-1,Maksym Gryn,Brian Liu,4000,Maksym Gryn vs Brian Liu,matched to source match
+25,legacy-25,legacy-25-sidebet-1,Maksym Gryn,Tyler Longo,14000,,paired by amount
+28,legacy-28,legacy-28-sidebet-1,Chris Harabas,Maksym Gryn,10000,,paired by amount
+28,legacy-28,legacy-28-sidebet-2,Chris Harabas,Lucas Siow,5000,Chris Harabas vs Lucas Siow,matched to source match
+29,legacy-29,legacy-29-sidebet-1,Chris Harabas,Maksym Gryn,5000,Chris Harabas vs Maksym Gryn,matched to source match
+29,legacy-29,legacy-29-sidebet-2,Chris Harabas,Lucas Siow,5000,Chris Harabas vs Lucas Siow,matched to source match
+30,legacy-30,legacy-30-sidebet-1,Lucas Siow,Maksym Gryn,10000,Maksym Gryn vs Lucas Siow,matched to source match
+31,legacy-31,legacy-31-sidebet-1,Lucas Siow,Maksym Gryn,10000,,paired by amount
+31,legacy-31,legacy-31-sidebet-2,Lucas Siow,Brian Liu,4000,Lucas Siow vs Brian Liu,matched to source match
+32,legacy-32,legacy-32-sidebet-1,Brian Liu,Maksym Gryn,4000,Brian Liu vs Maksym Gryn,matched to source match
+32,legacy-32,legacy-32-sidebet-2,Lucas Siow,Maksym Gryn,10000,Lucas Siow vs Maksym Gryn,matched to source match
+32,legacy-32,legacy-32-sidebet-3,Lucas Siow,Daniel Founier,4000,Lucas Siow vs Daniel Founier,matched to source match
+34,legacy-34,legacy-34-sidebet-1,Lucas Siow,Maksym Gryn,10000,Maksym Gryn vs Lucas Siow,matched to source match
+35,legacy-35,legacy-35-sidebet-1,Brian Liu,Lucas Siow,4000,,paired by amount
+45,legacy-45,legacy-45-sidebet-1,Lucas Siow,Brian Liu,4000,,paired by amount
+46,legacy-46,legacy-46-sidebet-1,Lucas Siow,Maksym Gryn,10000,,paired by amount
+46,legacy-46,legacy-46-sidebet-2,Lucas Siow,Brian Liu,4000,Lucas Siow vs Brian Liu,matched to source match
+50,legacy-50,legacy-50-sidebet-1,Maksym Gryn,Brian Liu,6000,Brian Liu vs Maksym Gryn,matched to source match
+51,legacy-51,legacy-51-sidebet-1,Tyler Longo,Maksym Gryn,6000,,paired by amount
+52,legacy-52,legacy-52-sidebet-1,Tyler Longo,Brian Liu,4000,,paired by amount
+69,legacy-69,legacy-69-sidebet-1,Lucas Siow,Brian Liu,10000,Lucas Siow vs Brian Liu,matched to source match
+69,legacy-69,legacy-69-sidebet-2,Maksym Gryn,Brian Liu,10000,,paired by amount
