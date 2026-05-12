@@ -73,6 +73,27 @@ export type Sidebet = {
   notes?: string;
 };
 
+export type CubeathonResult = {
+  id: string;
+  cubeathonEventId: string;
+  playerId: string;
+  displayNameSnapshot: string;
+  moneyCents: number;
+  ranking: number;
+  matchWins: number;
+  matchesPlayed: number;
+  notes?: string;
+};
+
+export type CubeathonEvent = {
+  id: string;
+  title: string;
+  eventDate: string;
+  notes: string;
+  createdBy: string;
+  results: CubeathonResult[];
+};
+
 export type AuditLogEntry = {
   id: string;
   entityType: string;
@@ -172,4 +193,15 @@ export type Achievement = {
   playerName: string;
   value: string;
   detail: string;
+};
+
+export type CubeathonPlayerStats = {
+  playerId: string;
+  displayName: string;
+  eventsPlayed: number;
+  totalMoneyCents: number;
+  averageRanking: number;
+  matchWins: number;
+  matchesPlayed: number;
+  matchWinRate: number;
 };

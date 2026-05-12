@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { filterDashboardDrafts } from "../lib/dashboard.ts";
-import { headToHeadForPlayer, playerStats, playerTrendSeries, standingsForDraft } from "../lib/stats.ts";
+import { cubeathonPlayerStats, headToHeadForPlayer, playerStats, playerTrendSeries, standingsForDraft } from "../lib/stats.ts";
 import type { DraftEvent, Player } from "../lib/types.ts";
 
 const players: Player[] = [
@@ -300,4 +300,38 @@ test("trend series includes every active player", () => {
   const { winRateSeries, moneySeries } = playerTrendSeries(manyPlayers, [manyPlayerDraft]);
   assert.equal(winRateSeries.length, 12);
   assert.equal(moneySeries.length, 12);
+});
+
+test("cubeathon stats aggregate money ranking and match win rate", () => {
+  const rows = cubeathonPlayerStats(players, [
+    {
+      id: "c1",
+      title: "Cubeathon 2026",
+      eventDate: "2026-07-01",
+      notes: "",
+      createdBy: "p1",
+      results: [
+        { id: "cr1", cubeathonEventId: "c1", playerId: "p1", displayNameSnapshot: "Lucas", moneyCents: 5000, ranking: 1, matchWins: 8, matchesPlayed: 10 },
+        { id: "cr2", cubeathonEventId: "c1", playerId: "p2", displayNameSnapshot: "David", moneyCents: -5000, ranking: 2, matchWins: 4, matchesPlayed: 10 }
+      ]
+    },
+    {
+      id: "c2",
+      title: "Cubeathon 2027",
+      eventDate: "2027-07-01",
+      notes: "",
+      createdBy: "p1",
+      results: [
+        { id: "cr3", cubeathonEventId: "c2", playerId: "p1", displayNameSnapshot: "Lucas", moneyCents: -1000, ranking: 3, matchWins: 5, matchesPlayed: 10 }
+      ]
+    }
+  ]);
+
+  const lucas = rows.find((row) => row.playerId === "p1");
+  assert.equal(lucas?.eventsPlayed, 2);
+  assert.equal(lucas?.totalMoneyCents, 4000);
+  assert.equal(lucas?.averageRanking, 2);
+  assert.equal(lucas?.matchWins, 13);
+  assert.equal(lucas?.matchesPlayed, 20);
+  assert.equal(lucas?.matchWinRate, 0.65);
 });

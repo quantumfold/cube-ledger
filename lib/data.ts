@@ -1,5 +1,5 @@
 import { drafts as seedDrafts, players as seedPlayers } from "@/lib/seed";
-import { DeckImage, DraftEvent, Player } from "@/lib/types";
+import { CubeathonEvent, DeckImage, DraftEvent, Player } from "@/lib/types";
 import { DbDeckImage, mapDeckImage, mapDraft, mapPlayer } from "@/lib/supabase/mappers";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -55,6 +55,37 @@ export async function getDraft(id: string): Promise<DraftEvent | undefined> {
   const draft = mapDraft(data);
   const [auditLogs, deckImages] = await Promise.all([getAuditLogsForDrafts([draft.id]), getDeckImagesForDrafts([draft.id])]);
   return attachDeckImages({ ...draft, auditLog: auditLogs.get(draft.id) ?? [] }, deckImages);
+}
+
+export async function getCubeathonEvents(): Promise<CubeathonEvent[]> {
+  const supabase = getSupabaseAdminClient() ?? getSupabaseServerClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("cubeathon_events")
+    .select("*, cubeathon_results (*)")
+    .order("event_date", { ascending: false });
+
+  if (error || !data) return [];
+
+  return data.map((event) => ({
+    id: event.id,
+    title: event.title,
+    eventDate: event.event_date,
+    notes: event.notes ?? "",
+    createdBy: event.created_by,
+    results: (event.cubeathon_results ?? []).map((result: Record<string, unknown>) => ({
+      id: String(result.id),
+      cubeathonEventId: String(result.cubeathon_event_id),
+      playerId: String(result.user_id),
+      displayNameSnapshot: String(result.display_name_snapshot),
+      moneyCents: Number(result.money_cents),
+      ranking: Number(result.ranking),
+      matchWins: Number(result.match_wins),
+      matchesPlayed: Number(result.matches_played),
+      notes: typeof result.notes === "string" ? result.notes : undefined
+    }))
+  }));
 }
 
 function fallbackPlayers() {

@@ -60,6 +60,8 @@ export type Database = {
       }>;
       draft_events: Table<AnyRow>;
       draft_participants: Table<AnyRow>;
+      cubeathon_events: Table<AnyRow>;
+      cubeathon_results: Table<AnyRow>;
       matches: Table<AnyRow>;
       match_results: Table<AnyRow>;
       money_results: Table<AnyRow>;

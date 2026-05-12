@@ -1,4 +1,4 @@
-import type { Achievement, DraftEvent, HeadToHead, Player, PlayerStats, Standing } from "./types.ts";
+import type { Achievement, CubeathonEvent, CubeathonPlayerStats, DraftEvent, HeadToHead, Player, PlayerStats, Standing } from "./types.ts";
 import { hasTeamDraftData, isTeamDraftFormat } from "./types.ts";
 
 export function money(cents: number) {
@@ -9,6 +9,44 @@ export function money(cents: number) {
 export function percent(value: number) {
   if (!Number.isFinite(value)) return "0.0%";
   return `${(value * 100).toFixed(1)}%`;
+}
+
+export function cubeathonPlayerStats(players: Player[], events: CubeathonEvent[]): CubeathonPlayerStats[] {
+  const stats = new Map<string, CubeathonPlayerStats>();
+  for (const player of players) {
+    stats.set(player.id, {
+      playerId: player.id,
+      displayName: player.displayName,
+      eventsPlayed: 0,
+      totalMoneyCents: 0,
+      averageRanking: 0,
+      matchWins: 0,
+      matchesPlayed: 0,
+      matchWinRate: 0
+    });
+  }
+
+  const rankingTotals = new Map<string, number>();
+  for (const event of events) {
+    for (const result of event.results) {
+      const row = stats.get(result.playerId);
+      if (!row) continue;
+      row.eventsPlayed += 1;
+      row.totalMoneyCents += result.moneyCents;
+      row.matchWins += result.matchWins;
+      row.matchesPlayed += result.matchesPlayed;
+      rankingTotals.set(result.playerId, (rankingTotals.get(result.playerId) ?? 0) + result.ranking);
+    }
+  }
+
+  return [...stats.values()]
+    .filter((row) => row.eventsPlayed > 0)
+    .map((row) => ({
+      ...row,
+      averageRanking: row.eventsPlayed ? (rankingTotals.get(row.playerId) ?? 0) / row.eventsPlayed : 0,
+      matchWinRate: row.matchesPlayed ? row.matchWins / row.matchesPlayed : 0
+    }))
+    .sort((a, b) => b.totalMoneyCents - a.totalMoneyCents || a.averageRanking - b.averageRanking || b.matchWinRate - a.matchWinRate);
 }
 
 export function standingsForDraft(draft: DraftEvent): Standing[] {
