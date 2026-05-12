@@ -86,47 +86,41 @@ export async function POST(request: Request) {
 
   if (moneyError) return NextResponse.json({ error: moneyError.message }, { status: 500 });
 
-  if (payload.initialMatch) {
+  if (payload.matches.length) {
     const participantByPlayerId = new Map(participants.map((participant) => [participant.user_id, participant.id]));
-    const playerAParticipantId = participantByPlayerId.get(payload.initialMatch.playerAId);
-    const playerBParticipantId = participantByPlayerId.get(payload.initialMatch.playerBId);
-    const sidebetWinnerParticipantId = payload.initialMatch.sidebetWinnerId
-      ? participantByPlayerId.get(payload.initialMatch.sidebetWinnerId)
-      : null;
-
-    if (!playerAParticipantId || !playerBParticipantId) {
-      return NextResponse.json({ error: "Initial match players must be draft participants" }, { status: 400 });
+    const matchRows = payload.matches.map((match, index) => ({
+      draft_event_id: draft.id,
+      round_label: `Match ${index + 1}`,
+      table_number: index + 1,
+      player_a_id: participantByPlayerId.get(match.playerAId),
+      player_b_id: participantByPlayerId.get(match.playerBId),
+      sidebet_cents: match.sidebetCents,
+      sidebet_winner_participant_id: match.sidebetWinnerId ? participantByPlayerId.get(match.sidebetWinnerId) ?? null : null,
+      notes: match.notes,
+      created_by: createdBy,
+      updated_by: createdBy
+    }));
+    if (matchRows.some((match) => !match.player_a_id || !match.player_b_id)) {
+      return NextResponse.json({ error: "Match players must be draft participants" }, { status: 400 });
     }
 
-    const { data: match, error: matchError } = await supabase
+    const { data: createdMatches, error: matchError } = await supabase
       .from("matches")
-      .insert({
-        draft_event_id: draft.id,
-        round_label: "Round 1",
-        table_number: 1,
-        player_a_id: playerAParticipantId,
-        player_b_id: playerBParticipantId,
-        sidebet_cents: payload.initialMatch.sidebetCents,
-        sidebet_winner_participant_id: sidebetWinnerParticipantId,
-        notes: payload.initialMatch.notes,
-        created_by: createdBy,
-        updated_by: createdBy
-      })
-      .select("id")
-      .single();
+      .insert(matchRows)
+      .select("id");
 
-    if (matchError || !match) return NextResponse.json({ error: matchError?.message ?? "Could not add match" }, { status: 500 });
+    if (matchError || !createdMatches) return NextResponse.json({ error: matchError?.message ?? "Could not add matches" }, { status: 500 });
 
-    const { error: resultError } = await supabase.from("match_results").insert({
+    const { error: resultError } = await supabase.from("match_results").insert(createdMatches.map((match, index) => ({
       match_id: match.id,
-      player_a_wins: payload.initialMatch.playerAWins,
-      player_b_wins: payload.initialMatch.playerBWins,
-      draws: payload.initialMatch.draws,
+      player_a_wins: payload.matches[index].playerAWins,
+      player_b_wins: payload.matches[index].playerBWins,
+      draws: payload.matches[index].draws,
       created_by: createdBy,
       updated_by: createdBy,
       corrected_by: createdBy,
       corrected_at: new Date().toISOString()
-    });
+    })));
 
     if (resultError) return NextResponse.json({ error: resultError.message }, { status: 500 });
   }
@@ -157,7 +151,7 @@ type DraftPayload = {
   notes: string;
   participantIds: string[];
   teams: Record<string, "A" | "B">;
-  initialMatch: null | {
+  matches: Array<{
     playerAId: string;
     playerBId: string;
     playerAWins: number;
@@ -166,7 +160,7 @@ type DraftPayload = {
     sidebetCents: number;
     sidebetWinnerId: string | null;
     notes: string;
-  };
+  }>;
 };
 
 function validateDraftPayload(body: unknown): { value: DraftPayload; error?: never } | { value?: never; error: string } {
@@ -199,8 +193,10 @@ function validateDraftPayload(body: unknown): { value: DraftPayload; error?: nev
   }
 
   const winningTeam = data.winningTeam === "A" || data.winningTeam === "B" ? data.winningTeam : null;
-  const initialMatch = validateInitialMatch(data.initialMatch, uniqueParticipantIds);
-  if (typeof initialMatch === "string") return { error: initialMatch };
+  const rawMatches = Array.isArray(data.matches) ? data.matches : data.initialMatch ? [data.initialMatch] : [];
+  const matches = rawMatches.map((match) => validateMatch(match, uniqueParticipantIds));
+  const matchError = matches.find((match): match is string => typeof match === "string");
+  if (matchError) return { error: matchError };
 
   return {
     value: {
@@ -213,18 +209,17 @@ function validateDraftPayload(body: unknown): { value: DraftPayload; error?: nev
       notes,
       participantIds: uniqueParticipantIds,
       teams,
-      initialMatch
+      matches: matches as DraftPayload["matches"]
     }
   };
 }
 
-function validateInitialMatch(raw: unknown, participantIds: string[]): DraftPayload["initialMatch"] | string {
-  if (!raw) return null;
-  if (!isRecord(raw)) return "Invalid initial match";
+function validateMatch(raw: unknown, participantIds: string[]): DraftPayload["matches"][number] | string {
+  if (!isRecord(raw)) return "Invalid match";
   const playerAId = typeof raw.playerAId === "string" ? raw.playerAId : "";
   const playerBId = typeof raw.playerBId === "string" ? raw.playerBId : "";
-  if (!participantIds.includes(playerAId) || !participantIds.includes(playerBId)) return "Initial match players must be selected players";
-  if (playerAId === playerBId) return "Initial match needs two different players";
+  if (!participantIds.includes(playerAId) || !participantIds.includes(playerBId)) return "Match players must be selected players";
+  if (playerAId === playerBId) return "Matches need two different players";
 
   const result = typeof raw.result === "string" ? raw.result : "";
   const parsedResult = parseResult(result);

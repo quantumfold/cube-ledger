@@ -1,9 +1,18 @@
 "use client";
 
-import { Save } from "lucide-react";
+import { Plus, Save, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { draftFormats, DraftFormat, isTeamDraftFormat, Player } from "@/lib/types";
+
+type MatchEntry = {
+  id: string;
+  playerAId: string;
+  playerBId: string;
+  result: string;
+  sidebetAmount: string;
+  notes: string;
+};
 
 export function FastEntryPanel({ players }: { players: Player[] }) {
   const router = useRouter();
@@ -16,11 +25,7 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   const [notes, setNotes] = useState("");
   const [teams, setTeams] = useState<Record<string, "A" | "B">>({});
   const [winningTeam, setWinningTeam] = useState<"" | "A" | "B">("");
-  const [playerAId, setPlayerAId] = useState("");
-  const [playerBId, setPlayerBId] = useState("");
-  const [matchResult, setMatchResult] = useState("2-1");
-  const [sidebetAmount, setSidebetAmount] = useState("$0");
-  const [matchNotes, setMatchNotes] = useState("");
+  const [matches, setMatches] = useState<MatchEntry[]>([]);
   const [status, setStatus] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const selectedPlayers = useMemo(() => players.filter((player) => selected.includes(player.id)), [players, selected]);
@@ -31,8 +36,18 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   }, [players]);
 
   useEffect(() => {
-    setPlayerAId((current) => current && selected.includes(current) ? current : selected[0] ?? "");
-    setPlayerBId((current) => current && selected.includes(current) ? current : selected[1] ?? selected[0] ?? "");
+    setMatches((current) => {
+      const fallbackA = selected[0] ?? "";
+      const fallbackB = selected[1] ?? selected[0] ?? "";
+      if (!current.length && fallbackA && fallbackB) {
+        return [{ id: crypto.randomUUID(), playerAId: fallbackA, playerBId: fallbackB, result: "2-1", sidebetAmount: "$0", notes: "" }];
+      }
+      return current.map((match) => ({
+        ...match,
+        playerAId: match.playerAId && selected.includes(match.playerAId) ? match.playerAId : fallbackA,
+        playerBId: match.playerBId && selected.includes(match.playerBId) ? match.playerBId : fallbackB
+      }));
+    });
     setTeams((current) => {
       const next: Record<string, "A" | "B"> = {};
       selected.forEach((id, index) => {
@@ -41,6 +56,28 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
       return next;
     });
   }, [selected]);
+
+  function addMatch() {
+    setMatches((current) => [
+      ...current,
+      {
+        id: crypto.randomUUID(),
+        playerAId: selected[0] ?? "",
+        playerBId: selected[1] ?? selected[0] ?? "",
+        result: "2-1",
+        sidebetAmount: "$0",
+        notes: ""
+      }
+    ]);
+  }
+
+  function updateMatch(id: string, patch: Partial<MatchEntry>) {
+    setMatches((current) => current.map((match) => match.id === id ? { ...match, ...patch } : match));
+  }
+
+  function removeMatch(id: string) {
+    setMatches((current) => current.filter((match) => match.id !== id));
+  }
 
   async function saveDraft() {
     setStatus("");
@@ -59,14 +96,16 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
           notes,
           participantIds: selected,
           teams: isTeamDraftFormat(format) ? teams : {},
-          initialMatch: playerAId && playerBId && playerAId !== playerBId ? {
-            playerAId,
-            playerBId,
-            result: matchResult,
-            sidebetAmount,
-            sidebetWinnerId: null,
-            notes: matchNotes
-          } : null
+          matches: matches
+            .filter((match) => match.playerAId && match.playerBId && match.playerAId !== match.playerBId)
+            .map((match) => ({
+              playerAId: match.playerAId,
+              playerBId: match.playerBId,
+              result: match.result,
+              sidebetAmount: match.sidebetAmount,
+              sidebetWinnerId: null,
+              notes: match.notes
+            }))
         })
       });
       const result = await response.json();
@@ -137,14 +176,25 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
           </div>
         </div>
       ) : null}
-      <div className="entry-grid" style={{ marginTop: 14 }}>
-        <select aria-label="Player A" value={playerAId} onChange={(event) => setPlayerAId(event.target.value)}>{selectedPlayers.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
-        <select aria-label="Player B" value={playerBId} onChange={(event) => setPlayerBId(event.target.value)}>{selectedPlayers.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
-        <select aria-label="Match result" value={matchResult} onChange={(event) => setMatchResult(event.target.value)}>
-          {["2-0", "2-1", "1-1-1", "1-2", "0-2"].map((result) => <option key={result}>{result}</option>)}
-        </select>
-        <input aria-label="Sidebet amount" placeholder="Sidebet, default $0" value={sidebetAmount} onChange={(event) => setSidebetAmount(event.target.value)} />
-        <input aria-label="Match notes" placeholder="Notes" value={matchNotes} onChange={(event) => setMatchNotes(event.target.value)} />
+      <div style={{ marginTop: 14 }}>
+        <div className="section-title">
+          <strong>Match results</strong>
+          <button type="button" onClick={addMatch}><Plus size={16} /> Add match</button>
+        </div>
+        <div className="grid" style={{ marginTop: 8, gap: 10 }}>
+          {matches.map((match, index) => (
+            <div className="entry-grid" key={match.id}>
+              <select aria-label={`Match ${index + 1} player A`} value={match.playerAId} onChange={(event) => updateMatch(match.id, { playerAId: event.target.value })}>{selectedPlayers.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
+              <select aria-label={`Match ${index + 1} player B`} value={match.playerBId} onChange={(event) => updateMatch(match.id, { playerBId: event.target.value })}>{selectedPlayers.map((player) => <option key={player.id} value={player.id}>{player.displayName}</option>)}</select>
+              <select aria-label={`Match ${index + 1} result`} value={match.result} onChange={(event) => updateMatch(match.id, { result: event.target.value })}>
+                {["2-0", "2-1", "1-1-1", "1-2", "0-2"].map((result) => <option key={result}>{result}</option>)}
+              </select>
+              <input aria-label={`Match ${index + 1} sidebet amount`} placeholder="Sidebet, default $0" value={match.sidebetAmount} onChange={(event) => updateMatch(match.id, { sidebetAmount: event.target.value })} />
+              <input aria-label={`Match ${index + 1} notes`} placeholder="Notes" value={match.notes} onChange={(event) => updateMatch(match.id, { notes: event.target.value })} />
+              <button type="button" disabled={matches.length <= 1} onClick={() => removeMatch(match.id)}><Trash2 size={16} /> Remove</button>
+            </div>
+          ))}
+        </div>
       </div>
       <div className="inline-actions" style={{ marginTop: 14 }}>
         <button type="button" className="primary" disabled={isSaving} onClick={saveDraft}><Save size={16} /> {isSaving ? "Saving..." : "Save draft"}</button>
