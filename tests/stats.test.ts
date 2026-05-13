@@ -41,7 +41,7 @@ const draft: DraftEvent = {
     { id: "mr1", draftEventId: "d1", participantId: "dp1", netCents: 0 },
     { id: "mr2", draftEventId: "d1", participantId: "dp2", netCents: 0 }
   ],
-  sidebets: [],
+  sidebets: [{ id: "sb-base", draftEventId: "d1", winnerParticipantId: "dp1", loserParticipantId: "dp2", amountCents: 1000, matchId: "m1" }],
   auditLog: []
 };
 
@@ -210,8 +210,8 @@ test("draft-level sidebets can include multiple bets for one player", () => {
   const lucas = standings.find((row) => row.participantId === "dp1");
   const david = standings.find((row) => row.participantId === "dp2");
   const maksym = standings.find((row) => row.participantId === "dp3");
-  assert.equal(lucas?.moneyCents, 22000);
-  assert.equal(david?.moneyCents, -12000);
+  assert.equal(lucas?.moneyCents, 21000);
+  assert.equal(david?.moneyCents, -11000);
   assert.equal(maksym?.moneyCents, -10000);
 });
 

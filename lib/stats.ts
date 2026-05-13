@@ -96,7 +96,7 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
     }
 
     if (draft.format === "Individual") {
-      const stake = draft.defaultStakeCents + match.sidebetCents;
+      const stake = draft.defaultStakeCents;
       if (match.playerAWins > match.playerBWins) {
         a.moneyCents += stake;
         b.moneyCents -= stake;

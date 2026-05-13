@@ -2,6 +2,7 @@ import { drafts as seedDrafts, players as seedPlayers } from "@/lib/seed";
 import { CubeathonEvent, DeckImage, DraftEvent, Player } from "@/lib/types";
 import { DbDeckImage, mapDeckImage, mapDraft, mapPlayer } from "@/lib/supabase/mappers";
 import { getSupabaseAdminClient, getSupabaseServerClient } from "@/lib/supabase/server";
+import { summarizeAuditEntry } from "@/lib/audit";
 
 const draftSelect = `
   *,
@@ -163,7 +164,7 @@ async function getAuditLogsForDrafts(draftIds: string[]) {
       action: entry.action,
       changedBy: entry.changed_by,
       changedAt: entry.changed_at,
-      summary: typeof entry.after === "object" && entry.after ? JSON.stringify(entry.after) : entry.action
+      summary: summarizeAuditEntry(entry.action, entry.before, entry.after)
     });
     logs.set(entry.entity_id, current);
   }

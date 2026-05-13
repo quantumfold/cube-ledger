@@ -31,6 +31,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const currentUser = await getCurrentAppUser();
   const changedBy = currentUser?.id ?? draft.createdBy;
   const before = snapshotDraft(draft);
+  const participantTeamById = new Map(payload.participants.map((participant) => [participant.id, participant.team]));
+  const sidebetRows: Array<Record<string, unknown>> = [];
 
   const { error: draftError } = await supabase
     .from("draft_events")
@@ -107,6 +109,32 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       })
       .eq("match_id", match.id);
     if (resultError) return NextResponse.json({ error: resultError.message }, { status: 500 });
+
+    const source = draft.matches.find((item) => item.id === match.id);
+    if (source) {
+      const sidebet = sidebetForMatch({
+        format: payload.format,
+        winningTeam: payload.winningTeam,
+        playerAParticipantId: source.playerAId,
+        playerBParticipantId: source.playerBId,
+        playerATeam: participantTeamById.get(source.playerAId) ?? null,
+        playerBTeam: participantTeamById.get(source.playerBId) ?? null,
+        playerAWins: match.playerAWins,
+        playerBWins: match.playerBWins,
+        amountCents: match.sidebetCents,
+        matchId: match.id,
+        draftEventId: id,
+        notes: match.notes,
+        changedBy
+      });
+      if (sidebet) sidebetRows.push(sidebet);
+    }
+  }
+
+  const syncedMatchIds = [...payload.matches.map((match) => match.id), ...payload.removedMatchIds];
+  if (syncedMatchIds.length) {
+    const { error: sidebetDeleteError } = await supabase.from("sidebets").delete().eq("draft_event_id", id).in("match_id", syncedMatchIds);
+    if (sidebetDeleteError) return NextResponse.json({ error: sidebetDeleteError.message }, { status: 500 });
   }
 
   if (payload.removedMatchIds.length) {
@@ -147,6 +175,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       corrected_at: new Date().toISOString()
     });
     if (createResultError) return NextResponse.json({ error: createResultError.message }, { status: 500 });
+
+    const sidebet = sidebetForMatch({
+      format: payload.format,
+      winningTeam: payload.winningTeam,
+      playerAParticipantId: match.playerAId,
+      playerBParticipantId: match.playerBId,
+      playerATeam: participantTeamById.get(match.playerAId) ?? null,
+      playerBTeam: participantTeamById.get(match.playerBId) ?? null,
+      playerAWins: match.playerAWins,
+      playerBWins: match.playerBWins,
+      amountCents: match.sidebetCents,
+      matchId: createdMatch.id,
+      draftEventId: id,
+      notes: match.notes,
+      changedBy
+    });
+    if (sidebet) sidebetRows.push(sidebet);
+  }
+
+  if (sidebetRows.length) {
+    const { error: sidebetError } = await supabase.from("sidebets").insert(sidebetRows);
+    if (sidebetError) return NextResponse.json({ error: sidebetError.message }, { status: 500 });
   }
 
   const after = {
@@ -385,6 +435,51 @@ function snapshotDraft(draft: NonNullable<Awaited<ReturnType<typeof getDraft>>>)
     participants: draft.participants,
     moneyResults: draft.moneyResults,
     matches: draft.matches
+  };
+}
+
+function sidebetForMatch(input: {
+  format: DraftFormat;
+  winningTeam: "A" | "B" | null;
+  playerAParticipantId: string;
+  playerBParticipantId: string;
+  playerATeam: "A" | "B" | null;
+  playerBTeam: "A" | "B" | null;
+  playerAWins: number;
+  playerBWins: number;
+  amountCents: number;
+  matchId: string;
+  draftEventId: string;
+  notes: string;
+  changedBy: string;
+}) {
+  if (input.amountCents <= 0) return null;
+  let winnerParticipantId = "";
+  let loserParticipantId = "";
+
+  if (isTeamDraftFormat(input.format)) {
+    if (!input.winningTeam || !input.playerATeam || !input.playerBTeam || input.playerATeam === input.playerBTeam) return null;
+    winnerParticipantId = input.playerATeam === input.winningTeam ? input.playerAParticipantId : input.playerBParticipantId;
+    loserParticipantId = input.playerATeam === input.winningTeam ? input.playerBParticipantId : input.playerAParticipantId;
+  } else if (input.playerAWins > input.playerBWins) {
+    winnerParticipantId = input.playerAParticipantId;
+    loserParticipantId = input.playerBParticipantId;
+  } else if (input.playerBWins > input.playerAWins) {
+    winnerParticipantId = input.playerBParticipantId;
+    loserParticipantId = input.playerAParticipantId;
+  } else {
+    return null;
+  }
+
+  return {
+    draft_event_id: input.draftEventId,
+    winner_participant_id: winnerParticipantId,
+    loser_participant_id: loserParticipantId,
+    amount_cents: input.amountCents,
+    match_id: input.matchId,
+    notes: input.notes || null,
+    created_by: input.changedBy,
+    updated_by: input.changedBy
   };
 }
 

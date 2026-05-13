@@ -75,8 +75,9 @@ The main tables are:
 - `users`: player accounts, Google identity metadata, email, profile image, and role
 - `draft_events`: one row per draft, including date, format, draft type, stake, notes, creator, updater, and version
 - `draft_participants`: players in a draft, including historical display name snapshot, team, deck archetype, colors, notes, and decklist
-- `matches`: match pairings, sidebet amount, sidebet winner, and notes
+- `matches`: match pairings, legacy/display sidebet amount, and notes
 - `match_results`: game wins, losses, draws, and correction metadata
+- `sidebets`: canonical sidebet payouts between draft participants
 - `money_results`: manually entered net money result per draft participant
 - `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
 - `deck_images`: metadata for uploaded deck photos stored in the private Supabase Storage bucket
@@ -99,7 +100,8 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 
 - New drafts default to `Teams After Draft` format.
 - Team drafts: each player on the winning team gains the draft stake, and each player on the losing team loses the draft stake. Individual match records do not affect stake payout.
-- Individual drafts: the match winner gains the draft stake plus any sidebet on that match, and the match loser loses the same amount.
+- Individual drafts: the match winner gains the draft stake, and the match loser loses the same amount.
+- Sidebet payouts are stored in `sidebets` and added on top of draft stake payouts. Match-level sidebet fields are kept only as legacy/display input.
 - Drawn individual matches do not move money for that match.
 
 ## Google Auth Setup

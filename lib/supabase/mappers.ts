@@ -1,4 +1,5 @@
 import { DeckImage, DraftEvent, DraftParticipant, Match, MoneyResult, Sidebet, normalizeDraftFormat, Player } from "@/lib/types";
+import { summarizeAuditEntry } from "@/lib/audit";
 
 type DbUser = {
   id: string;
@@ -101,6 +102,7 @@ type DbAuditLog = {
   action: string;
   changed_by: string;
   changed_at: string;
+  before: unknown;
   after: unknown;
 };
 
@@ -140,7 +142,7 @@ export function mapDraft(row: DbDraft): DraftEvent {
       action: entry.action,
       changedBy: entry.changed_by,
       changedAt: entry.changed_at,
-      summary: typeof entry.after === "object" && entry.after ? JSON.stringify(entry.after) : entry.action
+      summary: summarizeAuditEntry(entry.action, entry.before, entry.after)
     }))
   };
 }

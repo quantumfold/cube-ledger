@@ -499,6 +499,29 @@ th {
   text-underline-offset: 2px;
 }
 
+.deck-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 220px));
+  gap: 12px;
+  margin: 10px 0 14px;
+}
+
+.deck-photo-card {
+  display: grid;
+  gap: 6px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.deck-photo-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8faf7;
+  object-fit: cover;
+}
+
 .text-button {
   min-height: auto;
   border: 0;

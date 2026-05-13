@@ -39,11 +39,11 @@ export function AuditLog({ entries, version, submitterNames }: AuditLogProps) {
                   onClick={() => toggleEntry(entry.id)}
                 >
                   {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <strong>{entry.action}</strong>
+                  <strong>{entry.summary}</strong>
                 </button>
                 {isExpanded ? (
                   <div id={`audit-log-entry-${entry.id}`} className="audit-log-details">
-                    <div className="muted">{entry.summary}</div>
+                    <div className="muted">Action: {entry.action}</div>
                     <div className="muted">Submitted by {submitterNames[entry.changedBy] ?? "Unknown user"}</div>
                   </div>
                 ) : null}

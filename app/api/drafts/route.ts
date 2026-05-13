@@ -123,6 +123,32 @@ export async function POST(request: Request) {
     })));
 
     if (resultError) return NextResponse.json({ error: resultError.message }, { status: 500 });
+
+    const sidebetRows = payload.matches.flatMap((match, index) => {
+      const playerAParticipantId = participantByPlayerId.get(match.playerAId);
+      const playerBParticipantId = participantByPlayerId.get(match.playerBId);
+      if (!playerAParticipantId || !playerBParticipantId) return [];
+      const sidebet = sidebetForMatch({
+        format: payload.format,
+        winningTeam: payload.winningTeam,
+        playerAParticipantId,
+        playerBParticipantId,
+        playerATeam: payload.teams[match.playerAId] ?? null,
+        playerBTeam: payload.teams[match.playerBId] ?? null,
+        playerAWins: match.playerAWins,
+        playerBWins: match.playerBWins,
+        amountCents: match.sidebetCents,
+        matchId: createdMatches[index].id,
+        draftEventId: draft.id,
+        notes: match.notes,
+        changedBy: createdBy
+      });
+      return sidebet ? [sidebet] : [];
+    });
+    if (sidebetRows.length) {
+      const { error: sidebetError } = await supabase.from("sidebets").insert(sidebetRows);
+      if (sidebetError) return NextResponse.json({ error: sidebetError.message }, { status: 500 });
+    }
   }
 
   await supabase.from("audit_log").insert({
@@ -139,6 +165,51 @@ export async function POST(request: Request) {
   });
 
   return NextResponse.json({ id: draft.id, status: "created" }, { status: 201 });
+}
+
+function sidebetForMatch(input: {
+  format: DraftFormat;
+  winningTeam: "A" | "B" | null;
+  playerAParticipantId: string;
+  playerBParticipantId: string;
+  playerATeam: "A" | "B" | null;
+  playerBTeam: "A" | "B" | null;
+  playerAWins: number;
+  playerBWins: number;
+  amountCents: number;
+  matchId: string;
+  draftEventId: string;
+  notes: string;
+  changedBy: string;
+}) {
+  if (input.amountCents <= 0) return null;
+  let winnerParticipantId = "";
+  let loserParticipantId = "";
+
+  if (isTeamDraftFormat(input.format)) {
+    if (!input.winningTeam || !input.playerATeam || !input.playerBTeam || input.playerATeam === input.playerBTeam) return null;
+    winnerParticipantId = input.playerATeam === input.winningTeam ? input.playerAParticipantId : input.playerBParticipantId;
+    loserParticipantId = input.playerATeam === input.winningTeam ? input.playerBParticipantId : input.playerAParticipantId;
+  } else if (input.playerAWins > input.playerBWins) {
+    winnerParticipantId = input.playerAParticipantId;
+    loserParticipantId = input.playerBParticipantId;
+  } else if (input.playerBWins > input.playerAWins) {
+    winnerParticipantId = input.playerBParticipantId;
+    loserParticipantId = input.playerAParticipantId;
+  } else {
+    return null;
+  }
+
+  return {
+    draft_event_id: input.draftEventId,
+    winner_participant_id: winnerParticipantId,
+    loser_participant_id: loserParticipantId,
+    amount_cents: input.amountCents,
+    match_id: input.matchId,
+    notes: input.notes || null,
+    created_by: input.changedBy,
+    updated_by: input.changedBy
+  };
 }
 
 type DraftPayload = {
