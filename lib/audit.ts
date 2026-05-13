@@ -5,10 +5,13 @@ export function summarizeAuditEntry(action: string, before: unknown, after: unkn
   const afterPayload = toPayload(after);
 
   if (action === "created" && afterPayload) {
-    const title = text(afterPayload.title);
-    const format = text(afterPayload.format);
-    const count = numberValue(afterPayload.participant_count);
-    return `Created${title ? ` "${title}"` : " draft"}${format ? ` as ${format}` : ""}${count ? ` with ${count} players` : ""}.`;
+    const details = [
+      text(afterPayload.title) ? `"${text(afterPayload.title)}"` : "draft",
+      text(afterPayload.format),
+      text(afterPayload.draft_type) || text(afterPayload.draftType),
+      numberValue(afterPayload.participant_count) ? `${numberValue(afterPayload.participant_count)} players` : ""
+    ].filter(Boolean);
+    return `Created ${details.join(", ")}.`;
   }
 
   if (action === "updated" && afterPayload) {
@@ -18,13 +21,12 @@ export function summarizeAuditEntry(action: string, before: unknown, after: unkn
       changedText("format", beforePayload, afterPayload),
       changedText("draft type", beforePayload, afterPayload, "draftType"),
       changedText("winning team", beforePayload, afterPayload, "winningTeam"),
-      changedMoney("stake", beforePayload, afterPayload, "defaultStakeCents"),
-      changedCount("participants", beforePayload, afterPayload),
-      changedCount("matches", beforePayload, afterPayload),
-      addedCount("new match", afterPayload, "newMatches"),
-      removedCount("match", afterPayload, "removedMatchIds")
+      changedMoney("stake", beforePayload, afterPayload, "defaultStakeCents", false),
+      changedLongText("notes", beforePayload, afterPayload),
+      ...participantChanges(beforePayload, afterPayload),
+      ...matchChanges(beforePayload, afterPayload)
     ].filter(Boolean);
-    return changes.length ? `Updated ${changes.join("; ")}.` : "Updated draft.";
+    return changes.length ? `Updated ${limitChanges(changes).join("; ")}.` : "Updated draft.";
   }
 
   if (action === "deleted") return "Deleted draft.";
@@ -60,32 +62,135 @@ function changedText(label: string, before: AuditPayload, after: AuditPayload, k
   return `${label} ${beforeValue || "blank"} -> ${afterValue || "blank"}`;
 }
 
-function changedMoney(label: string, before: AuditPayload, after: AuditPayload, key: string) {
+function changedMoney(label: string, before: AuditPayload, after: AuditPayload, key: string, signed = true) {
   const beforeValue = numberValue(before?.[key]);
   const afterValue = numberValue(after?.[key]);
   if (beforeValue === afterValue) return "";
-  return `${label} ${formatMoney(beforeValue)} -> ${formatMoney(afterValue)}`;
+  return `${label} ${formatMoney(beforeValue, signed)} -> ${formatMoney(afterValue, signed)}`;
 }
 
-function changedCount(label: string, before: AuditPayload, after: AuditPayload) {
-  const beforeCount = Array.isArray(before?.[label]) ? before?.[label].length : 0;
-  const afterCount = Array.isArray(after?.[label]) ? after?.[label].length : 0;
-  if (beforeCount === afterCount) return "";
-  return `${label} ${beforeCount} -> ${afterCount}`;
+function changedLongText(label: string, before: AuditPayload, after: AuditPayload, key = label) {
+  const beforeValue = text(before?.[key]);
+  const afterValue = text(after?.[key]);
+  if (beforeValue === afterValue) return "";
+  if (!beforeValue && afterValue) return `${label} added`;
+  if (beforeValue && !afterValue) return `${label} cleared`;
+  return `${label} changed`;
 }
 
-function addedCount(label: string, after: AuditPayload, key: string) {
-  const count = Array.isArray(after?.[key]) ? after?.[key].length : 0;
-  return count ? `added ${count} ${label}${count === 1 ? "" : "es"}` : "";
+function participantChanges(before: AuditPayload, after: AuditPayload) {
+  const beforeParticipants = recordsById(before?.participants);
+  const afterParticipants = recordsById(after?.participants);
+  const changes: string[] = [];
+
+  for (const [id, afterParticipant] of afterParticipants) {
+    const beforeParticipant = beforeParticipants.get(id);
+    if (!beforeParticipant) continue;
+    const name = participantName(beforeParticipant, afterParticipant);
+    const participantFields = [
+      changedText(`${name} team`, beforeParticipant, afterParticipant, "team"),
+      changedText(`${name} archetype`, beforeParticipant, afterParticipant, "deckArchetype"),
+      changedColors(name, beforeParticipant, afterParticipant),
+      changedLongText(`${name} strategy`, beforeParticipant, afterParticipant, "strategy"),
+      changedLongText(`${name} deck notes`, beforeParticipant, afterParticipant, "deckNotes"),
+      changedLongText(`${name} decklist`, beforeParticipant, afterParticipant, "decklist"),
+      changedMoney(`${name} money`, beforeParticipant, afterParticipant, "moneyCents")
+    ].filter(Boolean);
+    changes.push(...participantFields);
+  }
+
+  return changes;
 }
 
-function removedCount(label: string, after: AuditPayload, key: string) {
-  const count = Array.isArray(after?.[key]) ? after?.[key].length : 0;
-  return count ? `removed ${count} ${label}${count === 1 ? "" : "es"}` : "";
+function matchChanges(before: AuditPayload, after: AuditPayload) {
+  const beforeParticipants = recordsById(before?.participants);
+  const beforeMatches = recordsById(before?.matches);
+  const afterMatches = recordsById(after?.matches);
+  const changes: string[] = [];
+
+  for (const [id, afterMatch] of afterMatches) {
+    const beforeMatch = beforeMatches.get(id);
+    if (!beforeMatch) continue;
+    const label = matchLabel(beforeMatch, beforeParticipants);
+    const matchFields = [
+      changedScore(label, beforeMatch, afterMatch),
+      changedMoney(`${label} sidebet`, beforeMatch, afterMatch, "sidebetCents"),
+      changedLongText(`${label} notes`, beforeMatch, afterMatch, "notes")
+    ].filter(Boolean);
+    changes.push(...matchFields);
+  }
+
+  const removedIds = arrayValue(after?.removedMatchIds).filter((id): id is string => typeof id === "string");
+  for (const id of removedIds) {
+    const removedMatch = beforeMatches.get(id);
+    changes.push(`removed ${removedMatch ? matchLabel(removedMatch, beforeParticipants) : "match"}`);
+  }
+
+  for (const newMatch of arrayValue(after?.newMatches)) {
+    if (!toPayload(newMatch)) continue;
+    changes.push(`added ${matchLabel(newMatch, beforeParticipants)} ${score(newMatch)}`);
+  }
+
+  return changes;
 }
 
-function formatMoney(cents: number) {
-  const sign = cents > 0 ? "+" : cents < 0 ? "-" : "";
+function changedColors(name: string, before: AuditPayload, after: AuditPayload) {
+  const beforeColors = arrayValue(before?.colors).filter((color): color is string => typeof color === "string").join("");
+  const afterColors = arrayValue(after?.colors).filter((color): color is string => typeof color === "string").join("");
+  if (beforeColors === afterColors) return "";
+  return `${name} colors ${beforeColors || "blank"} -> ${afterColors || "blank"}`;
+}
+
+function changedScore(label: string, before: AuditPayload, after: AuditPayload) {
+  const beforeScore = score(before);
+  const afterScore = score(after);
+  return beforeScore === afterScore ? "" : `${label} score ${beforeScore} -> ${afterScore}`;
+}
+
+function score(match: unknown) {
+  const payload = toPayload(match);
+  return `${numberValue(payload?.playerAWins)}-${numberValue(payload?.playerBWins)}-${numberValue(payload?.draws)}`;
+}
+
+function matchLabel(match: unknown, participants: Map<string, Record<string, unknown>>) {
+  const payload = toPayload(match);
+  const playerA = text(payload?.playerAId);
+  const playerB = text(payload?.playerBId);
+  const playerAName = participantName(participants.get(playerA) ?? null);
+  const playerBName = participantName(participants.get(playerB) ?? null);
+  return `${playerAName || "Player A"} vs ${playerBName || "Player B"}`;
+}
+
+function participantName(...participants: AuditPayload[]) {
+  for (const participant of participants) {
+    const name = text(participant?.displayNameSnapshot) || text(participant?.displayName) || text(participant?.name);
+    if (name) return name;
+  }
+  return "Player";
+}
+
+function recordsById(value: unknown) {
+  const records = new Map<string, Record<string, unknown>>();
+  for (const item of arrayValue(value)) {
+    const payload = toPayload(item);
+    const id = text(payload?.id);
+    if (payload && id) records.set(id, payload);
+  }
+  return records;
+}
+
+function arrayValue(value: unknown) {
+  return Array.isArray(value) ? value : [];
+}
+
+function limitChanges(changes: string[]) {
+  const maxChanges = 10;
+  if (changes.length <= maxChanges) return changes;
+  return [...changes.slice(0, maxChanges), `${changes.length - maxChanges} more changes`];
+}
+
+function formatMoney(cents: number, signed = true) {
+  const sign = signed && cents > 0 ? "+" : cents < 0 ? "-" : "";
   return `${sign}$${Math.abs(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
