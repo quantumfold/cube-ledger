@@ -28,6 +28,9 @@ export function AuditLog({ entries, version, submitterNames }: AuditLogProps) {
       <div className="list">
         {entries.map((entry) => {
           const isExpanded = expandedEntries.has(entry.id);
+          const submittedBy = submitterNames[entry.changedBy] ?? "Unknown user";
+          const submittedAt = new Date(entry.changedAt).toLocaleString();
+          const actionLabel = actionTitle(entry.action);
           return (
             <div className="list-item audit-log-item" key={entry.id}>
               <div>
@@ -39,20 +42,29 @@ export function AuditLog({ entries, version, submitterNames }: AuditLogProps) {
                   onClick={() => toggleEntry(entry.id)}
                 >
                   {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <strong>{entry.summary}</strong>
+                  <strong>{submittedBy} {actionLabel}</strong>
                 </button>
                 {isExpanded ? (
                   <div id={`audit-log-entry-${entry.id}`} className="audit-log-details">
+                    <div>{entry.summary}</div>
                     <div className="muted">Action: {entry.action}</div>
-                    <div className="muted">Submitted by {submitterNames[entry.changedBy] ?? "Unknown user"}</div>
+                    <div className="muted">Submitted by {submittedBy} on {submittedAt}</div>
                   </div>
                 ) : null}
               </div>
-              <span className="muted">{new Date(entry.changedAt).toLocaleString()}</span>
+              <span className="muted">{submittedAt}</span>
             </div>
           );
         })}
       </div>
     </section>
   );
+}
+
+function actionTitle(action: string) {
+  if (action === "created") return "created this draft";
+  if (action === "deleted") return "deleted this draft";
+  if (action === "deck_photo_added") return "added a deck photo";
+  if (action === "deck_photo_deleted") return "deleted a deck photo";
+  return "updated this draft";
 }
