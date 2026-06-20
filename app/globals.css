@@ -478,6 +478,12 @@ th {
   margin-top: 8px;
 }
 
+.upload-status {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
 .deck-photo-links {
   display: flex;
   align-items: center;

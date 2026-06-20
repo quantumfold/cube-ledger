@@ -75,6 +75,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [uploadingParticipantId, setUploadingParticipantId] = useState<string | null>(null);
+  const [photoUploadStatusByParticipant, setPhotoUploadStatusByParticipant] = useState<Record<string, string>>({});
   const [deckImagesByParticipant, setDeckImagesByParticipant] = useState<Record<string, DeckImage[]>>(() => Object.fromEntries(
     draft.participants.map((participant) => [participant.id, participant.deckImages ?? []])
   ));
@@ -151,6 +152,7 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
     }
 
     setStatus("");
+    setPhotoUploadStatusByParticipant((current) => ({ ...current, [participantId]: `Uploading ${file.name}...` }));
     setUploadingParticipantId(participantId);
     try {
       const compressed = await compressImage(file);
@@ -171,10 +173,13 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
         ...current,
         [participantId]: [...(current[participantId] ?? []), image]
       }));
+      setPhotoUploadStatusByParticipant((current) => ({ ...current, [participantId]: `Uploaded ${file.name}.` }));
       setStatus("Deck photo uploaded.");
       router.refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Could not upload deck photo");
+      const message = error instanceof Error ? error.message : "Could not upload deck photo";
+      setPhotoUploadStatusByParticipant((current) => ({ ...current, [participantId]: message }));
+      setStatus(message);
     } finally {
       setUploadingParticipantId(null);
     }
@@ -329,7 +334,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
                     event.target.value = "";
                   }}
                 />
-                {uploadingParticipantId === participant.id ? <span className="muted">Uploading...</span> : null}
+                {photoUploadStatusByParticipant[participant.id] ? (
+                  <span className="upload-status">{photoUploadStatusByParticipant[participant.id]}</span>
+                ) : null}
               </div>
               {(deckImagesByParticipant[participant.id] ?? []).length ? (
                 <div className="deck-photo-links">
