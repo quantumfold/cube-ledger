@@ -42,8 +42,6 @@ export type Database = {
         file_size_bytes: number;
         caption: string | null;
         created_at: string;
-        updated_by: string | null;
-        updated_at: string;
       }, {
         id?: string;
         draft_event_id: string;
@@ -55,8 +53,6 @@ export type Database = {
         file_size_bytes: number;
         caption?: string | null;
         created_at?: string;
-        updated_by?: string | null;
-        updated_at?: string;
       }>;
       draft_events: Table<AnyRow>;
       draft_participants: Table<AnyRow>;

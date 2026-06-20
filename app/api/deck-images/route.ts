@@ -62,8 +62,7 @@ export async function POST(request: Request) {
       file_name: file.name,
       mime_type: file.type,
       file_size_bytes: file.size,
-      caption: caption || null,
-      updated_by: currentUser.id
+      caption: caption || null
     })
     .select("*")
     .single();
