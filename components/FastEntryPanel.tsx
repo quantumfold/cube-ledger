@@ -20,7 +20,7 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
   const [format, setFormat] = useState<DraftFormat>("Teams After Draft");
   const [draftType, setDraftType] = useState("Vintage");
   const [title, setTitle] = useState("Tuesday Cube Draft");
-  const [eventDate, setEventDate] = useState("2026-05-05");
+  const [eventDate, setEventDate] = useState(() => todayDateInputValue());
   const [stake, setStake] = useState("$50");
   const [notes, setNotes] = useState("");
   const [teams, setTeams] = useState<Record<string, "A" | "B">>({});
@@ -77,6 +77,26 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
 
   function removeMatch(id: string) {
     setMatches((current) => current.filter((match) => match.id !== id));
+  }
+
+  function createTeamMatches() {
+    if (!isTeamDraftFormat(format)) return;
+    const teamA = selectedPlayers.filter((player) => teams[player.id] === "A");
+    const teamB = selectedPlayers.filter((player) => teams[player.id] === "B");
+    if (!teamA.length || !teamB.length) {
+      setStatus("Assign at least one player to each team before creating team matches.");
+      return;
+    }
+
+    setMatches(teamA.flatMap((playerA) => teamB.map((playerB) => ({
+      id: crypto.randomUUID(),
+      playerAId: playerA.id,
+      playerBId: playerB.id,
+      result: "2-1",
+      sidebetAmount: "$0",
+      notes: ""
+    }))));
+    setStatus(`Created ${teamA.length * teamB.length} team matches.`);
   }
 
   async function saveDraft() {
@@ -179,7 +199,12 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
       <div style={{ marginTop: 14 }}>
         <div className="section-title">
           <strong>Match results</strong>
-          <button type="button" onClick={addMatch}><Plus size={16} /> Add match</button>
+          <div className="inline-actions">
+            {isTeamDraftFormat(format) ? (
+              <button type="button" onClick={createTeamMatches}>Create team matches</button>
+            ) : null}
+            <button type="button" onClick={addMatch}><Plus size={16} /> Add match</button>
+          </div>
         </div>
         <div className="grid" style={{ marginTop: 8, gap: 10 }}>
           {matches.map((match, index) => (
@@ -202,4 +227,12 @@ export function FastEntryPanel({ players }: { players: Player[] }) {
       {status ? <p className="muted" role="status">{status}</p> : null}
     </section>
   );
+}
+
+function todayDateInputValue() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
