@@ -135,12 +135,27 @@ create table deck_images (
   mime_type text not null,
   file_size_bytes integer not null check (file_size_bytes > 0 and file_size_bytes <= 2097152),
   caption text,
-  created_at timestamptz not null default now(),
-  updated_by uuid references users(id),
-  updated_at timestamptz not null default now()
+  created_at timestamptz not null default now()
 );
 
 create index deck_images_participant_idx on deck_images (draft_participant_id, created_at);
+
+create table decklist_extractions (
+  id uuid primary key default gen_random_uuid(),
+  deck_image_id uuid not null references deck_images(id) on delete cascade,
+  draft_participant_id uuid not null references draft_participants(id) on delete cascade,
+  status text not null check (status in ('pending', 'completed', 'failed')),
+  raw_text text,
+  parsed_cards jsonb not null default '{}'::jsonb,
+  uncertain_cards jsonb not null default '[]'::jsonb,
+  model text,
+  error text,
+  created_by uuid references users(id),
+  created_at timestamptz not null default now()
+);
+
+create index decklist_extractions_deck_image_idx on decklist_extractions (deck_image_id, created_at desc);
+create index decklist_extractions_participant_idx on decklist_extractions (draft_participant_id, created_at desc);
 
 ```
 
@@ -153,6 +168,7 @@ create index deck_images_participant_idx on deck_images (draft_participant_id, c
 - `PATCH /api/drafts/:id`: update draft details, participants, deck notes, match results, money results, add/remove matches, and notes.
 - `DELETE /api/drafts/:id`: soft-delete a draft and record the deletion in the audit log.
 - `GET /deck-images/:id`: authorize a deck image request and redirect to a fresh signed Storage URL.
+- `POST /api/deck-images/:id/extract`: extract an editable decklist from a deck photo with OpenAI vision and save the extraction attempt.
 - `GET /api/stats`: aggregate dashboard stats with filters.
 - Future Supabase routes: `/api/audit`, role-management APIs, and richer player-management APIs.
 

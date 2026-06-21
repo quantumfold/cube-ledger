@@ -54,6 +54,31 @@ export type Database = {
         caption?: string | null;
         created_at?: string;
       }>;
+      decklist_extractions: Table<{
+        id: string;
+        deck_image_id: string;
+        draft_participant_id: string;
+        status: string;
+        raw_text: string | null;
+        parsed_cards: Json | null;
+        uncertain_cards: Json | null;
+        model: string | null;
+        error: string | null;
+        created_by: string | null;
+        created_at: string;
+      }, {
+        id?: string;
+        deck_image_id: string;
+        draft_participant_id: string;
+        status: string;
+        raw_text?: string | null;
+        parsed_cards?: Json | null;
+        uncertain_cards?: Json | null;
+        model?: string | null;
+        error?: string | null;
+        created_by?: string | null;
+        created_at?: string;
+      }>;
       draft_events: Table<AnyRow>;
       draft_participants: Table<AnyRow>;
       cubeathon_events: Table<AnyRow>;

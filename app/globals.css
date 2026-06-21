@@ -485,17 +485,32 @@ th {
 }
 
 .deck-photo-links {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: 10px;
-  flex-wrap: wrap;
   margin: 8px 0;
 }
 
 .deck-photo-link {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
+}
+
+.deck-photo-extraction {
+  display: grid;
+  gap: 8px;
+}
+
+.decklist-extraction-preview {
+  display: grid;
+  gap: 8px;
+  max-width: 680px;
+}
+
+.decklist-extraction-preview textarea {
+  width: 100%;
+  min-height: 180px;
 }
 
 .deck-photo-links a {

@@ -48,6 +48,9 @@ Create `.env.local` in the project root:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+OPENAI_API_KEY=your_openai_api_key
+# Optional. Defaults to gpt-4.1-mini.
+OPENAI_VISION_MODEL=gpt-4.1-mini
 ```
 
 Run the local dev server:
@@ -65,8 +68,9 @@ Open the app at the local URL printed by Next.js, usually [http://localhost:3000
 3. Create the tables from the schema in [docs/implementation-plan.md](docs/implementation-plan.md).
 4. Run [docs/seed-players.sql](docs/seed-players.sql) to create the playgroup player accounts.
 5. Run [docs/deck-images.sql](docs/deck-images.sql) to create the deck photo metadata table and private `deck-images` Storage bucket.
-6. Run [docs/data-safety-upgrades.sql](docs/data-safety-upgrades.sql) to add soft-delete and edit metadata columns.
-7. Confirm the `users.email` values match the Google accounts players will use to log in.
+6. Run [docs/decklist-extractions.sql](docs/decklist-extractions.sql) to store decklist OCR extraction attempts.
+7. Run [docs/data-safety-upgrades.sql](docs/data-safety-upgrades.sql) to add soft-delete and edit metadata columns.
+8. Confirm the `users.email` values match the Google accounts players will use to log in.
 
 The `deck-images` bucket is private. The app creates short-lived signed URLs when draft detail pages are loaded, so deck photos are not public files.
 
@@ -81,6 +85,7 @@ The main tables are:
 - `money_results`: manually entered net money result per draft participant
 - `audit_log`: meaningful draft changes with submitter, timestamp, before state, and after state
 - `deck_images`: metadata for uploaded deck photos stored in the private Supabase Storage bucket
+- `decklist_extractions`: saved OCR/vision extraction attempts for deck photos
 
 ## Deck Photos
 
@@ -95,6 +100,7 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 - Draft detail pages show `Deck photo 1` and `Deck photo 2` links beside each player's decklist
 - Deck photo links use `/deck-images/:id`, which checks the app session and redirects to a fresh signed Storage URL
 - Uploading or deleting a deck photo creates an audit log entry for the draft
+- Draft edit pages can extract a decklist from a deck photo with OpenAI vision. The result is editable before copying it into the participant decklist.
 
 ## Money Rules
 

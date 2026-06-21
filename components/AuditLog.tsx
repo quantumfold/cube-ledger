@@ -66,5 +66,6 @@ function actionTitle(action: string) {
   if (action === "deleted") return "deleted this draft";
   if (action === "deck_photo_added") return "added a deck photo";
   if (action === "deck_photo_deleted") return "deleted a deck photo";
+  if (action === "decklist_extracted") return "extracted a decklist";
   return "updated this draft";
 }

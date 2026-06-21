@@ -39,6 +39,19 @@ export function summarizeAuditEntry(action: string, before: unknown, after: unkn
     return `Deleted deck photo${text(beforePayload.file_name) ? ` (${text(beforePayload.file_name)})` : ""}.`;
   }
 
+  if (action === "decklist_extracted" && afterPayload) {
+    const fileName = text(afterPayload.file_name);
+    const mainboardCount = numberValue(afterPayload.mainboard_count);
+    const sideboardCount = numberValue(afterPayload.sideboard_count);
+    const uncertainCount = numberValue(afterPayload.uncertain_count);
+    return [
+      `Extracted decklist${fileName ? ` from ${fileName}` : ""}`,
+      mainboardCount ? `${mainboardCount} mainboard cards` : "",
+      sideboardCount ? `${sideboardCount} sideboard cards` : "",
+      uncertainCount ? `${uncertainCount} uncertain` : ""
+    ].filter(Boolean).join("; ") + ".";
+  }
+
   return humanizeAction(action);
 }
 

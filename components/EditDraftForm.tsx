@@ -35,6 +35,12 @@ type NewMatchEdit = Omit<MatchEdit, "id"> & {
   roundLabel: string;
 };
 
+type DecklistExtractionPreview = {
+  decklistText: string;
+  uncertainCards: string[];
+  model?: string;
+};
+
 export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const router = useRouter();
   const [title, setTitle] = useState(draft.title);
@@ -76,6 +82,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [uploadingParticipantId, setUploadingParticipantId] = useState<string | null>(null);
   const [photoUploadStatusByParticipant, setPhotoUploadStatusByParticipant] = useState<Record<string, string>>({});
+  const [extractingImageId, setExtractingImageId] = useState<string | null>(null);
+  const [extractionStatusByImage, setExtractionStatusByImage] = useState<Record<string, string>>({});
+  const [extractionPreviewByImage, setExtractionPreviewByImage] = useState<Record<string, DecklistExtractionPreview>>({});
   const [deckImagesByParticipant, setDeckImagesByParticipant] = useState<Record<string, DeckImage[]>>(() => Object.fromEntries(
     draft.participants.map((participant) => [participant.id, participant.deckImages ?? []])
   ));
@@ -203,6 +212,54 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not delete deck photo");
     }
+  }
+
+  async function extractDecklist(imageId: string) {
+    setStatus("");
+    setExtractingImageId(imageId);
+    setExtractionStatusByImage((current) => ({ ...current, [imageId]: "Extracting decklist..." }));
+    try {
+      const response = await fetch(`/api/deck-images/${imageId}/extract`, { method: "POST" });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error ?? "Could not extract decklist");
+      const extraction = result.extraction as {
+        decklistText?: string;
+        uncertainCards?: string[];
+        model?: string;
+      };
+      setExtractionPreviewByImage((current) => ({
+        ...current,
+        [imageId]: {
+          decklistText: extraction.decklistText ?? "",
+          uncertainCards: extraction.uncertainCards ?? [],
+          model: extraction.model
+        }
+      }));
+      setExtractionStatusByImage((current) => ({ ...current, [imageId]: "Review extracted decklist below." }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Could not extract decklist";
+      setExtractionStatusByImage((current) => ({ ...current, [imageId]: message }));
+      setStatus(message);
+    } finally {
+      setExtractingImageId(null);
+    }
+  }
+
+  function updateExtractionPreview(imageId: string, decklistText: string) {
+    setExtractionPreviewByImage((current) => ({
+      ...current,
+      [imageId]: {
+        ...(current[imageId] ?? { uncertainCards: [] }),
+        decklistText
+      }
+    }));
+  }
+
+  function applyExtractedDecklist(participantId: string, imageId: string) {
+    const preview = extractionPreviewByImage[imageId];
+    if (!preview?.decklistText.trim()) return;
+    updateParticipant(participantId, { decklist: preview.decklistText });
+    setStatus("Extracted decklist copied into the decklist field. Review it, then save changes.");
   }
 
   function addNewMatch() {
@@ -341,10 +398,30 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
               {(deckImagesByParticipant[participant.id] ?? []).length ? (
                 <div className="deck-photo-links">
                   {(deckImagesByParticipant[participant.id] ?? []).map((image, index) => (
-                    <span key={image.id} className="deck-photo-link">
-                      <a href={`/deck-images/${image.id}`} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
-                      <button type="button" className="text-button" onClick={() => void deleteDeckPhoto(participant.id, image.id)}>Remove</button>
-                    </span>
+                    <div key={image.id} className="deck-photo-extraction">
+                      <span className="deck-photo-link">
+                        <a href={`/deck-images/${image.id}`} target="_blank" rel="noreferrer">Deck photo {index + 1}</a>
+                        <button type="button" className="text-button" disabled={extractingImageId === image.id} onClick={() => void extractDecklist(image.id)}>
+                          {extractingImageId === image.id ? "Extracting..." : "Extract decklist"}
+                        </button>
+                        <button type="button" className="text-button" onClick={() => void deleteDeckPhoto(participant.id, image.id)}>Remove</button>
+                      </span>
+                      {extractionStatusByImage[image.id] ? <span className="upload-status">{extractionStatusByImage[image.id]}</span> : null}
+                      {extractionPreviewByImage[image.id] ? (
+                        <div className="decklist-extraction-preview">
+                          <textarea
+                            aria-label={`${participantNames.get(participant.id)} extracted decklist`}
+                            value={extractionPreviewByImage[image.id].decklistText}
+                            onChange={(event) => updateExtractionPreview(image.id, event.target.value)}
+                            rows={8}
+                          />
+                          {extractionPreviewByImage[image.id].uncertainCards.length ? (
+                            <p className="muted">Uncertain: {extractionPreviewByImage[image.id].uncertainCards.join(", ")}</p>
+                          ) : null}
+                          <button type="button" onClick={() => applyExtractedDecklist(participant.id, image.id)}>Use as decklist</button>
+                        </div>
+                      ) : null}
+                    </div>
                   ))}
                 </div>
               ) : (
