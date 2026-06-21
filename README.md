@@ -49,8 +49,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 OPENAI_API_KEY=your_openai_api_key
-# Optional. Defaults to gpt-5.4-mini.
-OPENAI_VISION_MODEL=gpt-5.4-mini
+# Optional. Defaults to gpt-5.5.
+OPENAI_VISION_MODEL=gpt-5.5
 ```
 
 Run the local dev server:
@@ -101,6 +101,7 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 - Deck photo links use `/deck-images/:id`, which checks the app session and redirects to a fresh signed Storage URL
 - Uploading or deleting a deck photo creates an audit log entry for the draft
 - Draft edit pages can extract a decklist from a deck photo with OpenAI vision. The server resizes and compresses the image before sending it to OpenAI, and the result is editable before copying it into the participant decklist.
+- Extracted card names are matched against [data/LucasVintageCube.txt](data/LucasVintageCube.txt). Cards without a close match are listed as high uncertainty.
 
 ## Money Rules
 

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import sharp from "sharp";
 import { getCurrentAppUser } from "@/lib/auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
@@ -7,17 +9,27 @@ import type { Database } from "@/lib/supabase/database.types";
 export const runtime = "nodejs";
 
 const bucketName = "deck-images";
-const openaiModel = process.env.OPENAI_VISION_MODEL || "gpt-5.4-mini";
+const openaiModel = process.env.OPENAI_VISION_MODEL || "gpt-5.5";
 const maxExtractionImageDimension = 1600;
 const extractionImageQuality = 82;
 const extractionImageMimeType = "image/jpeg";
+const cubeListPath = path.join(process.cwd(), "data", "LucasVintageCube.txt");
+const minimumCardMatchScore = 0.82;
 
 type ExtractionJson = {
-  mainboard?: Array<{ quantity?: number; cardName?: string }>;
-  sideboard?: Array<{ quantity?: number; cardName?: string }>;
+  mainboard?: ExtractedCard[];
+  sideboard?: ExtractedCard[];
   uncertain?: string[];
   notes?: string;
   rawText?: string;
+};
+
+type ExtractedCard = {
+  quantity?: number;
+  cardName?: string;
+  originalCardName?: string;
+  matchConfidence?: "high" | "medium" | "low";
+  matchScore?: number;
 };
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -47,14 +59,16 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: extraction.error }, { status: 502 });
   }
 
-  const decklistText = formatDecklist(extraction.parsed);
+  const cubeCards = await loadCubeCards();
+  const matchedExtraction = matchExtractionToCube(extraction.parsed, cubeCards);
+  const decklistText = formatDecklist(matchedExtraction);
   const rawText = extraction.parsed.rawText || decklistText;
-  const uncertainCards = extraction.parsed.uncertain ?? [];
+  const uncertainCards = matchedExtraction.uncertain ?? [];
   const parsedCards = {
-    mainboard: extraction.parsed.mainboard ?? [],
-    sideboard: extraction.parsed.sideboard ?? [],
+    mainboard: matchedExtraction.mainboard ?? [],
+    sideboard: matchedExtraction.sideboard ?? [],
     uncertain: uncertainCards,
-    notes: extraction.parsed.notes ?? ""
+    notes: matchedExtraction.notes ?? ""
   };
 
   const { data: extractionRow, error: insertError } = await supabase
@@ -84,8 +98,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       model: openaiModel,
       original_size_bytes: originalBuffer.byteLength,
       optimized_size_bytes: optimizedImage.byteLength,
-      mainboard_count: countCards(extraction.parsed.mainboard),
-      sideboard_count: countCards(extraction.parsed.sideboard),
+      mainboard_count: countCards(matchedExtraction.mainboard),
+      sideboard_count: countCards(matchedExtraction.sideboard),
       uncertain_count: uncertainCards.length
     }
   });
@@ -122,7 +136,8 @@ async function extractDecklistFromImage(apiKey: string, mimeType: string, imageB
               "Extract the Magic: The Gathering decklist from this image.",
               "Return only valid JSON with this shape:",
               "{\"mainboard\":[{\"quantity\":1,\"cardName\":\"Card Name\"}],\"sideboard\":[],\"uncertain\":[],\"notes\":\"\",\"rawText\":\"\"}",
-              "Use exact card names when readable. Put partially obscured or uncertain cards in uncertain.",
+              "Use exact card names when readable. Card names will be reconciled against the Lucas Vintage Cube list after OCR.",
+              "Put partially obscured or uncertain cards in uncertain.",
               "If quantities are not visible, use 1. Do not invent cards."
             ].join(" ")
           },
@@ -176,6 +191,103 @@ async function optimizeImageForExtraction(buffer: Buffer) {
       mozjpeg: true
     })
     .toBuffer();
+}
+
+async function loadCubeCards() {
+  const text = await readFile(cubeListPath, "utf8");
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+}
+
+function matchExtractionToCube(extraction: ExtractionJson, cubeCards: string[]): ExtractionJson {
+  const uncertain = [...(extraction.uncertain ?? [])];
+  const mainboard = (extraction.mainboard ?? []).map((card) => matchCardToCube(card, cubeCards, uncertain));
+  const sideboard = (extraction.sideboard ?? []).map((card) => matchCardToCube(card, cubeCards, uncertain));
+  return {
+    ...extraction,
+    mainboard,
+    sideboard,
+    uncertain
+  };
+}
+
+function matchCardToCube(card: ExtractedCard, cubeCards: string[], uncertain: string[]): ExtractedCard {
+  const cardName = typeof card.cardName === "string" ? card.cardName.trim() : "";
+  if (!cardName) {
+    uncertain.push("High uncertainty: unreadable card name");
+    return { ...card, cardName: "Unknown card", matchConfidence: "low", matchScore: 0 };
+  }
+
+  const match = bestCubeMatch(cardName, cubeCards);
+  if (!match || match.score < minimumCardMatchScore) {
+    uncertain.push(`High uncertainty: "${cardName}" did not closely match a Lucas Vintage Cube card${match ? `; nearest was "${match.cardName}" (${Math.round(match.score * 100)}%)` : ""}`);
+    return {
+      ...card,
+      originalCardName: cardName,
+      matchConfidence: "low",
+      matchScore: match?.score ?? 0
+    };
+  }
+
+  return {
+    ...card,
+    cardName: match.cardName,
+    originalCardName: cardName === match.cardName ? undefined : cardName,
+    matchConfidence: match.score >= 0.94 ? "high" : "medium",
+    matchScore: match.score
+  };
+}
+
+function bestCubeMatch(cardName: string, cubeCards: string[]) {
+  const normalizedCardName = normalizeCardName(cardName);
+  let best: { cardName: string; score: number } | null = null;
+
+  for (const cubeCard of cubeCards) {
+    const score = similarity(normalizedCardName, normalizeCardName(cubeCard));
+    if (!best || score > best.score) best = { cardName: cubeCard, score };
+    if (score === 1) break;
+  }
+
+  return best;
+}
+
+function normalizeCardName(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function similarity(a: string, b: string) {
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  if (a.includes(b) || b.includes(a)) return Math.min(a.length, b.length) / Math.max(a.length, b.length);
+  const distance = levenshteinDistance(a, b);
+  return 1 - distance / Math.max(a.length, b.length);
+}
+
+function levenshteinDistance(a: string, b: string) {
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  const current = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+      );
+    }
+    for (let j = 0; j <= b.length; j += 1) previous[j] = current[j];
+  }
+
+  return previous[b.length];
 }
 
 function outputText(body: unknown) {
