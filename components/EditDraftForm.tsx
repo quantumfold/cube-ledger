@@ -4,6 +4,7 @@ import { Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { standingsForDraft } from "@/lib/stats";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { DeckImage, draftFormats, DraftEvent, isTeamDraftFormat } from "@/lib/types";
 
 type ParticipantEdit = {
@@ -43,6 +44,7 @@ type DecklistExtractionPreview = {
 
 export function EditDraftForm({ draft }: { draft: DraftEvent }) {
   const router = useRouter();
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const [title, setTitle] = useState(draft.title);
   const [eventDate, setEventDate] = useState(draft.eventDate);
   const [format, setFormat] = useState<DraftEvent["format"]>(draft.format);
@@ -219,7 +221,9 @@ export function EditDraftForm({ draft }: { draft: DraftEvent }) {
     setExtractingImageId(imageId);
     setExtractionStatusByImage((current) => ({ ...current, [imageId]: "Extracting decklist..." }));
     try {
-      const response = await fetch(`/api/deck-images/${imageId}/extract`, { method: "POST" });
+      const { data } = await supabase.auth.getSession();
+      const headers = data.session?.access_token ? { Authorization: `Bearer ${data.session.access_token}` } : undefined;
+      const response = await fetch(`/api/deck-images/${imageId}/extract`, { method: "POST", headers });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error ?? "Could not extract decklist");
       const extraction = result.extraction as {

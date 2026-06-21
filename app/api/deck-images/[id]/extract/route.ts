@@ -32,12 +32,12 @@ type ExtractedCard = {
   matchScore?: number;
 };
 
-export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = getSupabaseAdminClient();
   if (!supabase) return NextResponse.json({ error: "Supabase service role is required for decklist extraction" }, { status: 500 });
 
-  const currentUser = await getCurrentAppUser();
+  const currentUser = await getCurrentAppUser(request);
   if (!currentUser) return NextResponse.json({ error: "You must be logged in to extract decklists" }, { status: 401 });
 
   const apiKey = process.env.OPENAI_API_KEY;
