@@ -36,6 +36,8 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
       <section className="grid kpis">
         <div className="panel kpi"><span>Overall record</span><strong>{stats?.matchWins}-{stats?.matchLosses}-{stats?.matchDraws}</strong></div>
         <div className="panel kpi"><span>Match win rate</span><strong>{percent(stats?.winRate ?? 0)}</strong></div>
+        <div className="panel kpi"><span>Team draft win rate</span><strong>{stats?.teamDraftsPlayed ? `${percent(stats.teamDraftWinRate)} (${stats.teamDraftWins}/${stats.teamDraftsPlayed})` : "N/A"}</strong></div>
+        <div className="panel kpi"><span>Avg VAR</span><strong>{stats?.valueAboveReplacementDrafts ? percent(stats.valueAboveReplacement) : "N/A"}</strong></div>
         <div className="panel kpi"><span>Money won/lost</span><strong>{money(stats?.totalMoneyCents ?? 0)}</strong></div>
         <div className="panel kpi"><span>Draft wins</span><strong>{stats?.firstPlaces ?? 0}</strong></div>
       </section>
@@ -45,7 +47,7 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
           <div className="section-title"><h2>Performance By Format</h2></div>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Draft</th><th>Format</th><th>Draft Type</th><th>Deck</th><th>Match Record</th><th>Money</th></tr></thead>
+              <thead><tr><th>Draft</th><th>Format</th><th>Draft Type</th><th>Deck</th><th>Match Record</th><th>VAR</th><th>Money</th></tr></thead>
               <tbody>
                 {formatRows.map(({ draft, standing }) => (
                   <tr key={draft.id}>
@@ -54,6 +56,7 @@ export default async function PlayerProfilePage({ params }: { params: Promise<{ 
                     <td>{draft.draftType}</td>
                     <td>{standing?.deckArchetype}</td>
                     <td>{standing?.matchWins}-{standing?.matchLosses}-{standing?.matchDraws}</td>
+                    <td>{typeof standing?.valueAboveReplacement === "number" ? percent(standing.valueAboveReplacement) : "N/A"}</td>
                     <td className={(standing?.moneyCents ?? 0) >= 0 ? "money-pos" : "money-neg"}>{money(standing?.moneyCents ?? 0)}</td>
                   </tr>
                 ))}
