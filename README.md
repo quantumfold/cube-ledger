@@ -49,8 +49,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_publishable_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 OPENAI_API_KEY=your_openai_api_key
-# Optional. Defaults to gpt-4.1-mini.
-OPENAI_VISION_MODEL=gpt-4.1-mini
+# Optional. Defaults to gpt-5.4-mini.
+OPENAI_VISION_MODEL=gpt-5.4-mini
 ```
 
 Run the local dev server:

@@ -7,7 +7,7 @@ import type { Database } from "@/lib/supabase/database.types";
 export const runtime = "nodejs";
 
 const bucketName = "deck-images";
-const openaiModel = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
+const openaiModel = process.env.OPENAI_VISION_MODEL || "gpt-5.4-mini";
 const maxExtractionImageDimension = 1600;
 const extractionImageQuality = 82;
 const extractionImageMimeType = "image/jpeg";
