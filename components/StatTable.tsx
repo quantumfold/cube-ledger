@@ -14,6 +14,7 @@ export function StatTable({ stats }: { stats: PlayerStats[] }) {
             <th>W-L-D</th>
             <th>Match Win %</th>
             <th>Team Draft Win %</th>
+            <th>Avg VAR</th>
             <th>Money</th>
           </tr>
         </thead>
@@ -31,6 +32,7 @@ export function StatTable({ stats }: { stats: PlayerStats[] }) {
               <td>{row.matchWins}-{row.matchLosses}-{row.matchDraws}</td>
               <td>{percent(row.winRate)}</td>
               <td>{row.teamDraftsPlayed ? `${percent(row.teamDraftWinRate)} (${row.teamDraftWins}/${row.teamDraftsPlayed})` : "N/A"}</td>
+              <td>{row.valueAboveReplacementDrafts ? percent(row.valueAboveReplacement) : "N/A"}</td>
               <td className={row.totalMoneyCents >= 0 ? "money-pos" : "money-neg"}>{money(row.totalMoneyCents)}</td>
             </tr>
           ))}

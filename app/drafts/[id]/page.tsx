@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Edit3 } from "lucide-react";
 import { AuditLog } from "@/components/AuditLog";
 import { getDraft, getPlayers } from "@/lib/data";
-import { money, standingsForDraft } from "@/lib/stats";
+import { money, percent, standingsForDraft } from "@/lib/stats";
 import { isTeamDraftFormat } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
           <div className="section-title"><h2>Final Standings</h2></div>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>Deck</th><th>Record</th><th>Games</th><th>Points</th><th>Money</th></tr></thead>
+              <thead><tr><th>Rank</th><th>Player</th><th>Team</th><th>Deck</th><th>Record</th><th>Games</th><th>Points</th>{isTeamDraftFormat(draft.format) ? <th>VAR</th> : null}<th>Money</th></tr></thead>
               <tbody>
                 {standings.map((row, index) => (
                   <tr key={row.participantId}>
@@ -53,6 +53,7 @@ export default async function DraftDetailPage({ params }: { params: Promise<{ id
                     <td>{row.matchWins}-{row.matchLosses}-{row.matchDraws}</td>
                     <td>{row.gamesWon}-{row.gamesLost}-{row.gamesDrawn}</td>
                     <td>{row.points}</td>
+                    {isTeamDraftFormat(draft.format) ? <td>{typeof row.valueAboveReplacement === "number" ? percent(row.valueAboveReplacement) : "N/A"}</td> : null}
                     <td className={row.moneyCents >= 0 ? "money-pos" : "money-neg"}>{money(row.moneyCents)}</td>
                   </tr>
                 ))}

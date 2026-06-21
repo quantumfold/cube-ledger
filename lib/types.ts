@@ -155,6 +155,8 @@ export type PlayerStats = {
   firstPlaces: number;
   teamDraftsPlayed: number;
   teamDraftWins: number;
+  valueAboveReplacementDrafts: number;
+  valueAboveReplacement: number;
   totalMoneyCents: number;
   winRate: number;
   gameWinRate: number;
@@ -174,6 +176,7 @@ export type Standing = {
   gamesDrawn: number;
   points: number;
   moneyCents: number;
+  valueAboveReplacement?: number;
   deckArchetype: string;
   colors: string[];
 };

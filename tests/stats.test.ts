@@ -126,6 +126,44 @@ test("team stats infer team drafts from winning team assignments", () => {
   assert.equal(david?.totalMoneyCents, -5000);
 });
 
+test("team draft value above replacement compares player rate to teammates without that player", () => {
+  const teamPlayers: Player[] = [
+    ...players,
+    { id: "p3", displayName: "Maksym", email: "maksym@example.com", role: "organizer", loginEnabled: true, showOnLeaderboard: true },
+    { id: "p4", displayName: "Jamie", email: "jamie@example.com", role: "organizer", loginEnabled: true, showOnLeaderboard: true }
+  ];
+  const teamDraft: DraftEvent = {
+    ...draft,
+    id: "team-var",
+    format: "Teams After Draft",
+    winningTeam: "A",
+    participants: [
+      { ...draft.participants[0], id: "tvp1", draftEventId: "team-var", team: "A" },
+      { ...draft.participants[1], id: "tvp2", draftEventId: "team-var", team: "A" },
+      { id: "tvp3", draftEventId: "team-var", playerId: "p3", displayNameSnapshot: "Maksym", seatOrder: 3, deckArchetype: "", colors: [], strategy: "", deckNotes: "", team: "B" },
+      { id: "tvp4", draftEventId: "team-var", playerId: "p4", displayNameSnapshot: "Jamie", seatOrder: 4, deckArchetype: "", colors: [], strategy: "", deckNotes: "", team: "B" }
+    ],
+    matches: [
+      { id: "tvm1", draftEventId: "team-var", roundLabel: "Round 1", playerAId: "tvp1", playerBId: "tvp3", playerAWins: 2, playerBWins: 0, draws: 0, sidebetCents: 0 },
+      { id: "tvm2", draftEventId: "team-var", roundLabel: "Round 1", playerAId: "tvp1", playerBId: "tvp4", playerAWins: 2, playerBWins: 1, draws: 0, sidebetCents: 0 },
+      { id: "tvm3", draftEventId: "team-var", roundLabel: "Round 2", playerAId: "tvp2", playerBId: "tvp3", playerAWins: 0, playerBWins: 2, draws: 0, sidebetCents: 0 },
+      { id: "tvm4", draftEventId: "team-var", roundLabel: "Round 2", playerAId: "tvp2", playerBId: "tvp4", playerAWins: 2, playerBWins: 0, draws: 0, sidebetCents: 0 }
+    ],
+    moneyResults: [],
+    sidebets: []
+  };
+
+  const standings = standingsForDraft(teamDraft);
+  const lucas = standings.find((row) => row.participantId === "tvp1");
+  const david = standings.find((row) => row.participantId === "tvp2");
+  assert.equal(lucas?.valueAboveReplacement, 0.5);
+  assert.equal(david?.valueAboveReplacement, -0.5);
+
+  const stats = playerStats(teamPlayers, [teamDraft]);
+  assert.equal(stats.find((row) => row.playerId === "p1")?.valueAboveReplacement, 0.5);
+  assert.equal(stats.find((row) => row.playerId === "p1")?.valueAboveReplacementDrafts, 1);
+});
+
 test("team draft win rate ignores drafts with no winner", () => {
   const tiedTeamDraft: DraftEvent = {
     ...draft,

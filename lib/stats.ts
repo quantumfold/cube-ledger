@@ -64,6 +64,7 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
       gamesDrawn: 0,
       points: 0,
       moneyCents: 0,
+      valueAboveReplacement: undefined,
       deckArchetype: participant.deckArchetype,
       colors: participant.colors
     });
@@ -112,6 +113,7 @@ export function standingsForDraft(draft: DraftEvent): Standing[] {
       const row = rows.get(participant.id);
       if (!row) continue;
       row.moneyCents += participant.team === draft.winningTeam ? draft.defaultStakeCents : -draft.defaultStakeCents;
+      row.valueAboveReplacement = valueAboveReplacementForParticipant(draft, participant.id);
     }
   }
 
@@ -144,6 +146,8 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       firstPlaces: 0,
       teamDraftsPlayed: 0,
       teamDraftWins: 0,
+      valueAboveReplacementDrafts: 0,
+      valueAboveReplacement: 0,
       totalMoneyCents: 0,
       winRate: 0,
       gameWinRate: 0,
@@ -173,6 +177,10 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
           row.firstPlaces += 1;
           row.teamDraftWins += 1;
         }
+        if (typeof standing.valueAboveReplacement === "number") {
+          row.valueAboveReplacement += standing.valueAboveReplacement;
+          row.valueAboveReplacementDrafts += 1;
+        }
       } else if (index === 0) {
         row.firstPlaces += 1;
       }
@@ -187,6 +195,7 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
       winRate: decidedMatches ? row.matchWins / decidedMatches : 0,
       gameWinRate: decidedGames ? row.gamesWon / decidedGames : 0,
       teamDraftWinRate: row.teamDraftsPlayed ? row.teamDraftWins / row.teamDraftsPlayed : 0,
+      valueAboveReplacement: row.valueAboveReplacementDrafts ? row.valueAboveReplacement / row.valueAboveReplacementDrafts : 0,
       averageMoneyCents: row.draftsPlayed ? Math.round(row.totalMoneyCents / row.draftsPlayed) : 0
     };
   });
@@ -194,6 +203,44 @@ export function playerStats(players: Player[], drafts: DraftEvent[]): PlayerStat
 
 function isTeamDraft(draft: DraftEvent) {
   return isTeamDraftFormat(draft.format) || hasTeamDraftData(draft);
+}
+
+function valueAboveReplacementForParticipant(draft: DraftEvent, participantId: string) {
+  const participant = draft.participants.find((item) => item.id === participantId);
+  if (!participant?.team) return undefined;
+  const participantById = new Map(draft.participants.map((item) => [item.id, item]));
+  let playerWins = 0;
+  let playerLosses = 0;
+  let teamWins = 0;
+  let teamLosses = 0;
+
+  for (const match of draft.matches) {
+    if (match.playerAWins === match.playerBWins) continue;
+    const playerA = participantById.get(match.playerAId);
+    const playerB = participantById.get(match.playerBId);
+    if (!playerA || !playerB) continue;
+
+    if (match.playerAId === participantId || match.playerBId === participantId) {
+      const participantWins = match.playerAId === participantId ? match.playerAWins : match.playerBWins;
+      const opponentWins = match.playerAId === participantId ? match.playerBWins : match.playerAWins;
+      if (participantWins > opponentWins) playerWins += 1;
+      else playerLosses += 1;
+      continue;
+    }
+
+    if (playerA.team === participant.team && playerB.team !== participant.team) {
+      if (match.playerAWins > match.playerBWins) teamWins += 1;
+      else teamLosses += 1;
+    } else if (playerB.team === participant.team && playerA.team !== participant.team) {
+      if (match.playerBWins > match.playerAWins) teamWins += 1;
+      else teamLosses += 1;
+    }
+  }
+
+  const playerDecided = playerWins + playerLosses;
+  const teamDecided = teamWins + teamLosses;
+  if (!playerDecided || !teamDecided) return undefined;
+  return playerWins / playerDecided - teamWins / teamDecided;
 }
 
 export function playerTrendSeries(players: Player[], drafts: DraftEvent[]) {
