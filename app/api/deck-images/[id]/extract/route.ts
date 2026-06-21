@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 import { getCurrentAppUser } from "@/lib/auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 
+export const runtime = "nodejs";
+
 const bucketName = "deck-images";
 const openaiModel = process.env.OPENAI_VISION_MODEL || "gpt-4.1-mini";
+const maxExtractionImageDimension = 1600;
+const extractionImageQuality = 82;
+const extractionImageMimeType = "image/jpeg";
 
 type ExtractionJson = {
   mainboard?: Array<{ quantity?: number; cardName?: string }>;
@@ -32,8 +38,10 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { data: file, error: downloadError } = await supabase.storage.from(bucketName).download(deckImage.storage_path);
   if (downloadError || !file) return NextResponse.json({ error: downloadError?.message ?? "Could not load deck photo" }, { status: 500 });
 
-  const imageBase64 = Buffer.from(await file.arrayBuffer()).toString("base64");
-  const extraction = await extractDecklistFromImage(apiKey, deckImage.mime_type, imageBase64);
+  const originalBuffer = Buffer.from(await file.arrayBuffer());
+  const optimizedImage = await optimizeImageForExtraction(originalBuffer);
+  const imageBase64 = optimizedImage.toString("base64");
+  const extraction = await extractDecklistFromImage(apiKey, extractionImageMimeType, imageBase64);
   if ("error" in extraction) {
     await recordExtractionFailure(deckImage, currentUser.id, extraction.error);
     return NextResponse.json({ error: extraction.error }, { status: 502 });
@@ -74,6 +82,8 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     after: {
       file_name: deckImage.file_name,
       model: openaiModel,
+      original_size_bytes: originalBuffer.byteLength,
+      optimized_size_bytes: optimizedImage.byteLength,
       mainboard_count: countCards(extraction.parsed.mainboard),
       sideboard_count: countCards(extraction.parsed.sideboard),
       uncertain_count: uncertainCards.length
@@ -150,6 +160,22 @@ async function recordExtractionFailure(deckImage: Database["public"]["Tables"]["
     error,
     created_by: userId
   });
+}
+
+async function optimizeImageForExtraction(buffer: Buffer) {
+  return sharp(buffer)
+    .rotate()
+    .resize({
+      width: maxExtractionImageDimension,
+      height: maxExtractionImageDimension,
+      fit: "inside",
+      withoutEnlargement: true
+    })
+    .jpeg({
+      quality: extractionImageQuality,
+      mozjpeg: true
+    })
+    .toBuffer();
 }
 
 function outputText(body: unknown) {

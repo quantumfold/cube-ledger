@@ -100,7 +100,7 @@ Deck photos are stored in Supabase Storage, not directly in Postgres.
 - Draft detail pages show `Deck photo 1` and `Deck photo 2` links beside each player's decklist
 - Deck photo links use `/deck-images/:id`, which checks the app session and redirects to a fresh signed Storage URL
 - Uploading or deleting a deck photo creates an audit log entry for the draft
-- Draft edit pages can extract a decklist from a deck photo with OpenAI vision. The result is editable before copying it into the participant decklist.
+- Draft edit pages can extract a decklist from a deck photo with OpenAI vision. The server resizes and compresses the image before sending it to OpenAI, and the result is editable before copying it into the participant decklist.
 
 ## Money Rules
 
